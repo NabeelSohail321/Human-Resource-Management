@@ -69,6 +69,7 @@ flutter:
   #   - images/a_dot_ham.jpeg
   assets:
     - assets/fonts/
+    - assets/images/
   fonts:
     - family: Lora
       fonts:

@@ -34,6 +34,7 @@ class MyApp extends StatelessWidget {
           '/frontPage': (context) =>  DashboardPage(),
           //sdjkaslkd
         },
+        title: 'HCM-Human Capital Management',
         debugShowCheckedModeBanner: false,
         home: const LoginPage(), // Ensure RegisterPage is used properly
       ),
