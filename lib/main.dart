@@ -1,41 +1,38 @@
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:human_capital_management/loginpage.dart';
-import 'package:provider/provider.dart';
-import 'Providers/auth_provider.dart';
-import 'auth_page.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:human_capital_management/Front%20side/Loginpage.dart';
+import 'Front side/Registerpage.dart';
+import 'Front side/dashBoard.dart';
+import 'Providers/userprovider.dart';
 import 'firebase_options.dart';
-import 'home_page.dart';
+import 'package:provider/provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
-      ],
-      child: MyApp(),
-    ),
-  );
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } catch (e) {
+    print("Error initializing Firebase: $e");
+  }
+
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => AuthProvider(), // Provide AuthProvider at the top level
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => UserProvider()), // Provide the UserProvider
+      ],
       child: MaterialApp(
-        debugShowCheckedModeBanner: false,
         routes: {
-          '/register': (context) => RegisterPage(), // Register page route
-          '/login': (context) => LoginPage(), // Login page route
-          '/homepage': (context) => HomePage(), // Login page route
+          '/frontPage': (context) => const Dashboard(),
         },
-        title: 'HCM Performance Enhancement System',
-        home: LoginPage(), // Home page or landing page
+        debugShowCheckedModeBanner: false,
+        home: const LoginPage(), // Ensure RegisterPage is used properly
       ),
     );
   }
