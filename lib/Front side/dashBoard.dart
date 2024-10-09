@@ -1,19 +1,28 @@
 import 'package:flutter/material.dart';
+import 'goalsettingPage.dart';
 
-class Dashboard extends StatefulWidget {
-  const Dashboard({super.key});
 
-  @override
-  State<Dashboard> createState() => _DashboardState();
-}
-
-class _DashboardState extends State<Dashboard> {
+class DashboardPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: Text("THIS IS THE DASH BOARD"),
+      appBar: AppBar(title: Text('Dashboard')),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Text('Welcome to the Dashboard'),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => GoalSettingPage()),
+                );
+              },
+              child: Text('Manage Goals'),
+            ),
+            // Add more buttons for other functionalities
+          ],
+        ),
       ),
     );
   }
