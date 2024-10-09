@@ -39,6 +39,7 @@ class _RegisterPageState extends State<RegisterPage> {
         password: pass.text.trim(),
       );
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('User registered successfully!')));
+      Navigator.push(context, MaterialPageRoute(builder: (context)=>LoginPage()));
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
     }

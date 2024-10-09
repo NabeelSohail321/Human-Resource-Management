@@ -26,7 +26,10 @@ class UserProvider extends ChangeNotifier {
   }) async {
     try {
       // Register user with Firebase Authentication
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(email: email, password: password);
+      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+          email: email,
+          password: password
+      );
 
       String userId = userCredential.user!.uid;
 
@@ -37,6 +40,8 @@ class UserProvider extends ChangeNotifier {
       String role = _isFirstUser ? "0" : "1";
       String node = _isFirstUser ? "HR" : "Employee";
 
+      // Get the user's UID
+      String uid = userCredential.user!.uid;
       // Save user information in the correct node in Firebase Database
       await _dbRef.child(node).child(userId).set({
         "name": name,
@@ -44,6 +49,7 @@ class UserProvider extends ChangeNotifier {
         "phone": phone,
         "role": role,
         "password": password,
+        "uid": uid,
       });
 
       // If first user, mark it as HR created
