@@ -11,7 +11,7 @@ class CustomTextStyles {
 class CustomAppBar {
   static AppBar customAppBar(String title) {
     return AppBar(
-      backgroundColor:const Color(0xFFe6b67e),
+      backgroundColor:const Color(0xFFDEE5D4),
       title: Text(
         title,
         style: customTextStyle,
@@ -24,7 +24,7 @@ class CustomAppBar {
     fontFamily: 'Lora',
     fontSize: 25,
     fontWeight: FontWeight.bold,
-    color: Colors.white,
+    color: Colors.black,
   );
 }
 

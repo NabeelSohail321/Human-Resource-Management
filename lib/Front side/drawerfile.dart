@@ -1,63 +1,18 @@
-import 'package:firebase_auth/firebase_auth.dart' as auth; // Alias Firebase User
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:human_capital_management/Front%20side/superadminpanel.dart';
+import 'package:provider/provider.dart';
+import '../Providers/usermodel.dart';
+import '../Providers/userprovider.dart';
 import '../components.dart';
 import 'dashBoard.dart';
 
-class Drawerfrontside extends StatefulWidget {
+class Drawerfrontside extends StatelessWidget {
   const Drawerfrontside({super.key});
 
   @override
-  State<Drawerfrontside> createState() => _DrawerfrontsideState();
-}
-
-class _DrawerfrontsideState extends State<Drawerfrontside> {
-  int? _role;
-  auth.User? currentUser;
-
-  @override
-  void initState() {
-    super.initState();
-    currentUser = FirebaseAuth.instance.currentUser;
-    fetchUserRole();
-  }
-
-  Future<void> fetchUserRole() async {
-    final currentUser = this.currentUser;
-    if (currentUser != null) {
-      try {
-        // Check the HR node first
-        final hrRef = FirebaseDatabase.instance.ref("HR/${currentUser.uid}");
-        final hrSnapshot = await hrRef.child("role").get();
-
-        if (hrSnapshot.exists) {
-          setState(() {
-            _role = int.parse(hrSnapshot.value.toString());
-          });
-        } else {
-          // If the role is not found in the HR node, check in the Employee node
-          final employeeRef = FirebaseDatabase.instance.ref("Employee/${currentUser.uid}");
-          final employeeSnapshot = await employeeRef.child("role").get();
-
-          if (employeeSnapshot.exists) {
-            setState(() {
-              _role = int.parse(employeeSnapshot.value.toString());
-            });
-          } else {
-            // Handle case where role is not found in either node
-            print("User role not found in HR or Employee nodes.");
-          }
-        }
-      } catch (e) {
-        print('Error fetching user role: $e');
-      }
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final userModel = Provider.of<UserModel>(context);
+
     return Drawer(
       backgroundColor: const Color(0xFFDEE5D4),
       child: ListView(
@@ -65,7 +20,7 @@ class _DrawerfrontsideState extends State<Drawerfrontside> {
           ListTile(
             title: Center(
               child: Text(
-                'Role: ${_role ?? "Role not found"}',
+                'Role: ${userModel.role ?? "Role not found"}',
                 style: CustomTextStyles.customTextStyle,
               ),
             ),
@@ -80,17 +35,36 @@ class _DrawerfrontsideState extends State<Drawerfrontside> {
               );
             },
           ),
-          ListTile(
-            leading: const Icon(Icons.home),
-            title: const Text("HR Management", style: CustomTextStyles.customTextStyle),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => SuperAdminPanel()),
-              );
-            },
-          ),
-        ],
+          if (userModel.role == 0)
+            ListTile(
+              leading: const Icon(Icons.home),
+              title: const Text("MD Management", style: CustomTextStyles.customTextStyle),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => SuperAdminPanel()),
+                );
+              },
+            ),
+            ListTile(
+            leading: const Icon(Icons.logout), // Updated icon for logout
+            title: const Text("Log out", style: CustomTextStyles.customTextStyle),
+              onTap: () async {
+                final userProvider = Provider.of<UserProvider>(context, listen: false);
+                try {
+                  await userProvider.logout(); // Call the logout method
+                  // Navigate to the login screen after logging out
+                  Navigator.pushReplacementNamed(context, '/login'); // Ensure you have defined this route
+                } catch (e) {
+                  print(e.toString());
+                  // Show a SnackBar if logout fails
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Logout failed: ${e.toString()}")),
+                  );
+                }
+              },
+            ),
+          ],
       ),
     );
   }
