@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "660204097674",
+    "project_id": "human-resource-managemen-c24ac",
+    "storage_bucket": "human-resource-managemen-c24ac.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:660204097674:android:39965da04a2a2ca2401d73",
+        "android_client_info": {
+          "package_name": "com.example.human_capital_management"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCg2HJ0-4AV73CQH092hzMWRvfrfn1RH8w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
