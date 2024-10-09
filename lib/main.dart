@@ -32,6 +32,7 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         routes: {
           '/frontPage': (context) =>  DashboardPage(),
+          //sdjkaslkd
         },
         debugShowCheckedModeBanner: false,
         home: const LoginPage(), // Ensure RegisterPage is used properly
