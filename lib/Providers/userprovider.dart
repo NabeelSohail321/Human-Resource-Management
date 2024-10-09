@@ -5,7 +5,9 @@ import 'package:flutter/material.dart';
 class UserProvider extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
+  User? _user;
 
+  User? get user => _user;
   bool _isFirstUser = true;
 
   bool get isFirstUser => _isFirstUser;
@@ -65,21 +67,35 @@ class UserProvider extends ChangeNotifier {
     return user?.emailVerified ?? false;
   }
 
-  Future<void> loginUser(String email, String password) async {
+  Future<void> login(String email, String password) async {
     try {
-      // Sign in the user
-      UserCredential userCredential = await _auth.signInWithEmailAndPassword(email: email, password: password);
+      // First, sign in the user using Firebase Authentication
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
 
-      // Check if the email is verified
-      if (!userCredential.user!.emailVerified) {
-        // If the email is not verified, sign out and show an error
-        await _auth.signOut();
-        throw Exception("Email not verified. Please verify your email before logging in.");
+      _user = userCredential.user;
+
+      // Check credentials in HR, Employee, and Manager nodes
+      final hrSnapshot = await _dbRef.child('HR').orderByChild('email').equalTo(email).once();
+      final employeeSnapshot = await _dbRef.child('Employee').orderByChild('email').equalTo(email).once();
+      final managerSnapshot = await _dbRef.child('Manager').orderByChild('email').equalTo(email).once();
+
+      // Verify if the user exists in any of the nodes
+      if (hrSnapshot.snapshot.exists || employeeSnapshot.snapshot.exists || managerSnapshot.snapshot.exists) {
+        // User exists in at least one node
+        notifyListeners();
+      } else {
+        // User does not exist in any node
+        throw Exception('User does not exist in any role.');
       }
-
-      notifyListeners();
     } on FirebaseAuthException catch (e) {
-      throw Exception("Error logging in: ${e.message}");
+      // Handle Firebase authentication errors
+      throw e; // Re-throwing for handling in the UI
+    } catch (e) {
+      // Handle other errors
+      throw Exception(e.toString());
     }
   }
 }
