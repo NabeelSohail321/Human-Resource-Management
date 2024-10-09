@@ -8,10 +8,9 @@ class AuthProvider with ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final DatabaseReference _dref = FirebaseDatabase.instance.ref();
   bool _isLoading = false;
-
   bool get isLoading => _isLoading;
 
-  Future<void> registerUser({
+   Future<void> registerUser({
     required String name,
     required String phone,
     required String email,
@@ -23,13 +22,11 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      // Check if CNIC already exists in users and admin nodes
+      // Check if CNIC already exists
       DatabaseEvent userEvent = await _dref.child('users').orderByChild('cnic').equalTo(cnic).once();
       DatabaseEvent adminEvent = await _dref.child('admin').orderByChild('cnic').equalTo(cnic).once();
 
       if (userEvent.snapshot.exists || adminEvent.snapshot.exists) {
-        _isLoading = false;
-        notifyListeners();
         throw Exception("CNIC already exists.");
       }
 
@@ -72,39 +69,45 @@ class AuthProvider with ChangeNotifier {
         }
       }
 
-      // Create user model and save data
+      // Create user model and save data without password
+      Map<String, dynamic> userData = {
+        'uid': uid,
+        'name': name,
+        'email': email,
+        'phone': phone,
+        'cnic': cnic,
+        'role': userRole,
+      };
+
       if (isFirstUser) {
-        // First user is an admin
-        await adminRef.child(uid).set({
-          'uid': uid,
-          'name': name,
-          'email': email,
-          'phone': phone,
-          'password': password,
-          'cnic': cnic,
-          'role': userRole,
-          'adminNumber': adminNumber.toString(),
-        });
+        userData['adminNumber'] = adminNumber.toString();
+        await adminRef.child(uid).set(userData);
       } else {
-        await usersRef.child(uid).set({
-          'uid': uid,
-          'name': name,
-          'email': email,
-          'phone': phone,
-          'password': password,
-          'cnic': cnic,
-          'role': userRole,
-          'userNumber': userNumber.toString(),
-        });
+        userData['userNumber'] = userNumber.toString();
+        await usersRef.child(uid).set(userData);
       }
 
       // Send verification email
       User? user = _auth.currentUser;
       if (user != null) {
         await user.sendEmailVerification();
+
+        // Navigate to a different page, informing the user to check their email
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Verification email sent! Please check your inbox.')),
+        );
         await user.reload();
-        if(user.emailVerified){
-          Navigator.pushNamed(context, '/homepage');
+        if(user.emailVerified) {
+          Navigator.pushNamed(context, '/login').then((value) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Login Successfull')),
+            );
+          });
+        }else{
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('please verify the email Again')),
+          );
+          await user.reload();
         }
       }
 
@@ -113,7 +116,10 @@ class AuthProvider with ChangeNotifier {
     } catch (error) {
       _isLoading = false;
       notifyListeners();
-      throw error; // Propagate error
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.toString())), // Provide more user-friendly messages if needed
+      );
     }
   }
+
 }

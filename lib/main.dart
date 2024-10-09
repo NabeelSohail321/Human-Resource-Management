@@ -2,7 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:human_capital_management/loginpage.dart';
 import 'package:provider/provider.dart';
-import 'Providers/auth.dart';
+import 'Providers/auth_provider.dart';
 import 'auth_page.dart';
 import 'firebase_options.dart';
 import 'home_page.dart';
@@ -12,7 +12,14 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+      ],
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -26,7 +33,6 @@ class MyApp extends StatelessWidget {
           '/register': (context) => RegisterPage(), // Register page route
           '/login': (context) => LoginPage(), // Login page route
           '/homepage': (context) => HomePage(), // Login page route
-
         },
         title: 'HCM Performance Enhancement System',
         home: LoginPage(), // Home page or landing page
