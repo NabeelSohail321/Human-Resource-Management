@@ -17,6 +17,9 @@ class UserProvider extends ChangeNotifier {
   final DatabaseReference _managerRef = FirebaseDatabase.instance.ref("Manager");
   List<Map<String, dynamic>> _users = [];
   bool _isLoading = false;
+  String? _userRole; // Variable to hold the user role
+  String? get userRole => _userRole; // Getter for user role
+
 
 
   Future<void> checkFirstUser() async {
@@ -33,22 +36,16 @@ class UserProvider extends ChangeNotifier {
   }) async {
     try {
       // Register user with Firebase Authentication
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
-          email: email,
-          password: password
-      );
+      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(email: email, password: password);
 
       String userId = userCredential.user!.uid;
 
-      // Send email verification
-      await userCredential.user!.sendEmailVerification();
-
+      // If this is the first user, assign them as HR (role 0), otherwise assign them as Employee (role 1)
       String role = _isFirstUser ? "0" : "1";
       String node = _isFirstUser ? "MD" : "Employee";
-
       // Get the user's UID
       String uid = userCredential.user!.uid;
-      // Save user information in the correct node in Firebase Database
+      // Save user information in the correct node
       await _dbRef.child(node).child(userId).set({
         "name": name,
         "email": email,
@@ -56,8 +53,10 @@ class UserProvider extends ChangeNotifier {
         "role": role,
         "password": password,
         "uid": uid,
+        "Date & Time": DateTime.now()
       });
 
+      // If first user, mark it as HR created
       if (_isFirstUser) {
         _isFirstUser = false;
       }
@@ -76,38 +75,6 @@ class UserProvider extends ChangeNotifier {
     user = _auth.currentUser;
 
     return user?.emailVerified ?? false;
-  }
-
-  Future<void> login(String email, String password) async {
-    try {
-      // First, sign in the user using Firebase Authentication
-      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-
-      _user = userCredential.user;
-
-      // Check credentials in HR, Employee, and Manager nodes
-      final hrSnapshot = await _dbRef.child('MD').orderByChild('email').equalTo(email).once();
-      final employeeSnapshot = await _dbRef.child('Employee').orderByChild('email').equalTo(email).once();
-      final managerSnapshot = await _dbRef.child('Manager').orderByChild('email').equalTo(email).once();
-
-      // Verify if the user exists in any of the nodes
-      if (hrSnapshot.snapshot.exists || employeeSnapshot.snapshot.exists || managerSnapshot.snapshot.exists) {
-        // User exists in at least one node
-        notifyListeners();
-      } else {
-        // User does not exist in any node
-        throw Exception('User does not exist in any role.');
-      }
-    } on FirebaseAuthException catch (e) {
-      // Handle Firebase authentication errors
-      throw e; // Re-throwing for handling in the UI
-    } catch (e) {
-      // Handle other errors
-      throw Exception(e.toString());
-    }
   }
 
   Future<void> logout() async {
@@ -178,6 +145,59 @@ class UserProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> fetchUserRole() async {
+    if (_user == null) {
+      throw Exception('User is not authenticated');
+    }
+
+    String uid = _user!.uid; // Get the user's UID
+
+    try {
+      // Fetch user data from the MD, Employee, and Manager nodes
+      final hrSnapshot = await _dbRef.child('MD').child(uid).once();
+      final employeeSnapshot = await _dbRef.child('Employee').child(uid).once();
+      final managerSnapshot = await _dbRef.child('Manager').child(uid).once();
+
+      // Reset user role before fetching
+      _userRole = null;
+
+      // Check if the user exists in the MD node
+      if (hrSnapshot.snapshot.exists) {
+        final hrData = hrSnapshot.snapshot.value as Map<dynamic, dynamic>?; // Cast to Map
+        if (hrData != null && hrData['email'] == _user!.email) {
+          _userRole = 'MD';
+        }
+      }
+
+      // Check if the user exists in the Employee node
+      if (employeeSnapshot.snapshot.exists) {
+        final employeeData = employeeSnapshot.snapshot.value as Map<dynamic, dynamic>?; // Cast to Map
+        if (employeeData != null && employeeData['email'] == _user!.email) {
+          _userRole = 'Employee';
+        }
+      }
+
+      // Check if the user exists in the Manager node
+      if (managerSnapshot.snapshot.exists) {
+        final managerData = managerSnapshot.snapshot.value as Map<dynamic, dynamic>?; // Cast to Map
+        if (managerData != null && managerData['email'] == _user!.email) {
+          _userRole = 'Manager';
+        }
+      }
+
+      // Notify listeners of the change in user role
+      notifyListeners();
+
+      // If the user role is still null, throw an exception
+      if (_userRole == null) {
+        throw Exception('User does not exist in any role.');
+      }
+
+    } catch (e) {
+      throw Exception('Failed to fetch user role: ${e.toString()}');
+    }
+  }
+
   Future<void> updateUserRole(String uid, String newRole) async {
     try {
       // Check which node the user is currently in
@@ -213,6 +233,10 @@ class UserProvider extends ChangeNotifier {
           'uid': uid,
           'name': userData['name'] ?? '',
           'email': userData['email'] ?? '',
+          'password':userData['password'] ?? '',
+          'phone':userData['phone'] ?? '',
+          'role': newRole,
+
         });
 
         fetchUsers(); // Refresh users

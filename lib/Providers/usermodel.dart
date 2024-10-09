@@ -1,57 +1,57 @@
-import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Auth
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 class UserModel with ChangeNotifier {
-  int? _role;
-  User? _currentUser; // Use User from firebase_auth
+  User? _currentUser; // Holds the current user
+  int? _role; // Role of the user (0: MD, 1: Employee, 2: Manager)
 
-  UserModel() {
-    fetchUserRole(); // Fetch the role when the model is instantiated
+  User? get currentUser => _currentUser; // Getter for current user
+  int? get role => _role; // Getter for user role
+
+  // Method to set current user and role
+  void setUser(User? user, int? role) {
+    _currentUser = user;
+    _role = role;
+    notifyListeners(); // Notify listeners of changes
   }
 
-  int? get role => _role; // Getter for role
-  User? get currentUser => _currentUser; // Getter for current user
+  // Fetch user details from MD, Employee, and Manager nodes
+  Future<void> fetchUserDetails(String uid) async {
+    try {
+      print("Fetching details for UID: $uid"); // Debug print
 
-  // Method to fetch the current user's role
-  Future<void> fetchUserRole() async {
-    _currentUser = FirebaseAuth.instance.currentUser; // Get current Firebase user
+      // Create references to each node
+      DatabaseReference mdRef = FirebaseDatabase.instance.ref('MD/$uid');
+      DatabaseReference employeeRef = FirebaseDatabase.instance.ref('Employee/$uid');
 
-    if (_currentUser != null) {
-      String uid = _currentUser!.uid; // Get the current user's UID
-
-      try {
-        // Check for role in MD (HR) node
-        final mdRef = FirebaseDatabase.instance.ref("MD/$uid");
-        final mdSnapshot = await mdRef.child("role").get();
-
-        if (mdSnapshot.exists) {
-          _role = int.parse(mdSnapshot.value.toString());
+      // Check MD node
+      DataSnapshot mdSnapshot = await mdRef.get();
+      if (mdSnapshot.exists) {
+        print("User found in MD node"); // Debug print
+        _role = 0; // Set role for MD
+        _currentUser = FirebaseAuth.instance.currentUser; // Get current user
+      } else {
+        // Check Employee node
+        DataSnapshot employeeSnapshot = await employeeRef.get();
+        if (employeeSnapshot.exists) {
+          print("User found in Employee node"); // Debug print
+          _role = 1; // Set role for Employee
+          _currentUser = FirebaseAuth.instance.currentUser; // Get current user
         } else {
-          // If not found in MD, check the Employee node
-          final employeeRef = FirebaseDatabase.instance.ref("Employee/$uid");
-          final employeeSnapshot = await employeeRef.child("role").get();
-
-          if (employeeSnapshot.exists) {
-            _role = int.parse(employeeSnapshot.value.toString());
-          } else {
-            // If not found in Employee, check the Manager node
-            final managerRef = FirebaseDatabase.instance.ref("Manager/$uid");
-            final managerSnapshot = await managerRef.child("role").get();
-
-            if (managerSnapshot.exists) {
-              _role = int.parse(managerSnapshot.value.toString());
-            } else {
-              // Handle case where the role is not found in any node
-              print("User role not found in MD, Employee, or Manager nodes.");
-            }
-          }
+          // Handle case where user data doesn't exist in any node
+          _currentUser = null;
+          _role = null;
+          print("User not found in any node."); // Debug print
         }
-      } catch (e) {
-        print('Error fetching user role: $e'); // Handle any errors that occur
       }
-    }
 
-    notifyListeners(); // Notify listeners after fetching the role
+      notifyListeners(); // Notify listeners of changes
+    } catch (e) {
+      print("Error fetching user details: $e");
+      _currentUser = null; // Reset user details on error
+      _role = null;
+      notifyListeners(); // Notify listeners of changes
+    }
   }
 }
