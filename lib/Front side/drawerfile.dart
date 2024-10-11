@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../Providers/usermodel.dart';
 import '../Providers/userprovider.dart';
 import '../components.dart';
+import 'adddepartments.dart';
 import 'dashBoard.dart';
 
 class Drawerfrontside extends StatelessWidget {
@@ -19,6 +20,7 @@ class Drawerfrontside extends StatelessWidget {
         bottomRight: Radius.circular(20.0), // Rounded bottom right corner
       ),
       child: Drawer(
+        width: 230,
         backgroundColor: const Color(0xFFDEE5D4),
         child: ListView(
           children: [
@@ -29,6 +31,7 @@ class Drawerfrontside extends StatelessWidget {
                   style: CustomTextStyles.customTextStyle,
                 ),
               ),
+              subtitle:Center(child: Text('Name: ${userModel.name ?? "Not Available"}')),
             ),
             ListTile(
               leading: const Icon(Icons.home),
@@ -36,7 +39,7 @@ class Drawerfrontside extends StatelessWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => DashboardPage()),
+                  MaterialPageRoute(builder: (context) => DashboardPage(role: '',)),
                 );
               },
             ),
@@ -51,6 +54,18 @@ class Drawerfrontside extends StatelessWidget {
                   );
                 },
               ),
+            if (userModel.role == 0)
+              ListTile(
+                leading: const Icon(Icons.home),
+                title: const Text("Add Departments", style: CustomTextStyles.customTextStyle),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => AddDepartmentPage()),
+                  );
+                },
+              ),
+
             // Additional options based on roles can be added here.
             ListTile(
               leading: const Icon(Icons.logout),

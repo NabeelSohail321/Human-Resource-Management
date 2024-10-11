@@ -1,25 +1,38 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:human_capital_management/Front%20side/totalgoalsachieved.dart';
 import 'package:provider/provider.dart';
 import '../Providers/usermodel.dart';
-import 'drawerfile.dart';
-import 'goalsettingPage.dart';
+import 'drawerfile.dart'; // Assuming this contains your custom drawer
 
 class DashboardPage extends StatefulWidget {
+  final String role;
+
+  const DashboardPage({Key? key, required this.role}) : super(key: key);
+
   @override
-  _DashboardPageState createState() => _DashboardPageState();
+  State<DashboardPage> createState() => _DashboardPageState();
 }
 
-class _DashboardPageState extends State<DashboardPage> with SingleTickerProviderStateMixin {
+class _DashboardPageState extends State<DashboardPage>
+    with SingleTickerProviderStateMixin {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   late AnimationController _animationController;
   late Animation<Offset> _slideAnimation;
+  late Animation<Offset> _contentSlideAnimation; // For the content slide
   bool isDrawerOpen = false;
+  User? user; // Store the user information
 
   @override
   void initState() {
     super.initState();
 
-    // Initialize the AnimationController for controlling the sliding drawer
+    // Fetch user details when the DashboardPage is initialized
+    user = FirebaseAuth.instance.currentUser; // Get the current user
+    if (user != null) {
+      Provider.of<UserModel>(context, listen: false).fetchUserDetails(user!.uid);
+    }
+
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
@@ -28,28 +41,16 @@ class _DashboardPageState extends State<DashboardPage> with SingleTickerProvider
     _slideAnimation = Tween<Offset>(begin: const Offset(-1.0, 0.0), end: Offset.zero)
         .animate(CurvedAnimation(parent: _animationController, curve: Curves.easeInOut));
 
-    // Fetch user details when the dashboard initializes
-    final userModel = Provider.of<UserModel>(context, listen: false);
-
-    // Get the currently logged-in user
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      // Fetch user details by UID
-      userModel.fetchUserDetails(user.uid);
-    } else {
-      // Handle the case when the user is not logged in
-      // You can navigate to a login page or show a message
-      print("User not logged in.");
-    }
+    // Content slide animation
+    _contentSlideAnimation = Tween<Offset>(begin: Offset.zero, end: const Offset(0.18, 0.0))
+        .animate(CurvedAnimation(parent: _animationController, curve: Curves.easeInOut));
   }
-
-
 
   void toggleDrawer() {
     if (isDrawerOpen) {
-      _animationController.reverse(); // Close drawer
+      _animationController.reverse();
     } else {
-      _animationController.forward(); // Open drawer
+      _animationController.forward();
     }
     setState(() {
       isDrawerOpen = !isDrawerOpen;
@@ -57,88 +58,61 @@ class _DashboardPageState extends State<DashboardPage> with SingleTickerProvider
   }
 
   @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
+  Widget build(BuildContext context) {
+    final userModel = Provider.of<UserModel>(context); // Listen to user model for updates
+
+    return Scaffold(
+      key: _scaffoldKey,
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.menu),
+          onPressed: toggleDrawer,
+        ),
+        title: const Text("Dash Board"),
+      ),
+      body: Stack(
+        children: [
+          // Animated content that moves to the side
+          SlideTransition(
+            position: _contentSlideAnimation,
+            child: Row(
+              children: [
+                SizedBox(width: 10,),
+                InkWell(
+                  child: Card(
+                    elevation: 5,
+                    child: Container(
+                      width: 200,
+                      height: 200,
+                      child: Center(child: Text("TOTAL\nGOALS",style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold,color: Colors.blueGrey))),
+                    ),
+                  ),
+                  onTap: (){
+                    Navigator.push(context, MaterialPageRoute(builder: (context)=>totalgoalsforEmployee()));
+                  },
+                ),
+
+              ],
+            ),
+          ),
+
+          // Animated Drawer
+          SlideTransition(
+            position: _slideAnimation,
+            child: Drawerfrontside(), // Replace with your custom drawer
+          ),
+
+          // Placeholder or content while loading user details
+          // if (userModel.isLoading) // Assuming you have a loading state in UserModel
+          //   Center(child: CircularProgressIndicator()),
+        ],
+      ),
+    );
   }
 
   @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text('Dashboard'),
-          leading: IconButton(
-            icon: Icon(Icons.menu),
-            onPressed: toggleDrawer, // Toggle drawer open/close
-          ),
-        ),
-        body: Stack(
-          children: <Widget>[
-            // Main Page Content
-            Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Text('Welcome to the Dashboard'),
-                  SizedBox(height: 20),
-
-                  // Use Consumer to listen for changes in UserModel
-                  Consumer<UserModel>(builder: (context, userModel, child) {
-                    if (userModel.currentUser == null) {
-                      return Text('Loading user data...');
-                    } else if (userModel.role == null) {
-                      return Text('Role not found.');
-                    } else {
-                      String roleText;
-                      switch (userModel.role) {
-                        case 0:
-                          roleText = "MD";
-                          break;
-                        case 1:
-                          roleText = "Employee";
-                          break;
-                        case 2:
-                          roleText = "Manager";
-                          break;
-                        default:
-                          roleText = "Unknown role";
-                      }
-                      return Text('Your Role: $roleText');
-                    }
-                  }),
-
-                  SizedBox(height: 20),
-
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (context) => GoalSettingPage()),
-                      );
-                    },
-                    child: Text('Manage Goals'),
-                  ),
-                  // Add more buttons for other functionalities
-                ],
-              ),
-            ),
-            // Sliding Drawer
-            SlideTransition(
-              position: _slideAnimation,
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.only(
-                    topRight: Radius.circular(20.0), // Rounded top right corner
-                    bottomRight: Radius.circular(20.0), // Rounded bottom right corner
-                  ),
-                ),
-                width: 250, // Set the width for the drawer
-                child: Drawerfrontside(), // Your custom drawer content
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 }

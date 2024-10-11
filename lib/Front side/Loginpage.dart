@@ -1,8 +1,8 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-import 'package:human_capital_management/Front%20side/Registerpage.dart';
+import 'package:provider/provider.dart';
 
+import '../Providers/userprovider.dart';
+import 'Registerpage.dart';
 import 'dashBoard.dart';
 
 class LoginPage extends StatefulWidget {
@@ -13,12 +13,9 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final FirebaseAuth authentication = FirebaseAuth.instance;
-  final DatabaseReference dref = FirebaseDatabase.instance.ref();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  bool isLoggingIn = false; // Track logging in state
 
   @override
   Widget build(BuildContext context) {
@@ -75,76 +72,79 @@ class _LoginPageState extends State<LoginPage> {
                 padding: const EdgeInsets.all(16.0),
                 child: Form(
                   key: _formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TextFormField(
-                        controller: emailController,
-                        decoration: const InputDecoration(
-                          hintText: "Enter Your Email Address",
-                          labelText: "Email",
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(15)),
+                  child: Consumer<UserProvider>(
+                    builder: (context, authProvider, child) {
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          TextFormField(
+                            controller: emailController,
+                            decoration: const InputDecoration(
+                              hintText: "Enter Your Email Address",
+                              labelText: "Email",
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.all(Radius.circular(15)),
+                              ),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter your email address';
+                              }
+                              String pattern =
+                                  r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$';
+                              RegExp regex = RegExp(pattern);
+                              if (!regex.hasMatch(value)) {
+                                return 'Please enter a valid email address';
+                              }
+                              return null;
+                            },
                           ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter your email address';
-                          }
-                          // Email regex pattern
-                          String pattern =
-                              r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$';
-                          RegExp regex = RegExp(pattern);
-                          if (!regex.hasMatch(value)) {
-                            return 'Please enter a valid email address';
-                          }
-                          return null; // Return null if the input is valid
-                        },
-                      ),
-                      const SizedBox(height: 10),
-                      TextFormField(
-                        controller: passwordController,
-                        decoration: const InputDecoration(
-                          hintText: "Enter Your Password",
-                          labelText: "Password",
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(15)),
+                          const SizedBox(height: 10),
+                          TextFormField(
+                            controller: passwordController,
+                            decoration: const InputDecoration(
+                              hintText: "Enter Your Password",
+                              labelText: "Password",
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.all(Radius.circular(15)),
+                              ),
+                            ),
+                            obscureText: true,
                           ),
-                        ),
-                        obscureText: true,
-                      ),
-                      const SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: isLoggingIn
-                            ? null
-                            : () {
-                          if (_formKey.currentState!.validate()) {
-                            loginUser();
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.black,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
+                          const SizedBox(height: 20),
+                          ElevatedButton(
+                            onPressed: authProvider.isLoggingIn
+                                ? null
+                                : () {
+                              if (_formKey.currentState!.validate()) {
+                                loginUser(authProvider);
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.black,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              minimumSize: const Size(double.infinity, 50),
+                            ),
+                            child: authProvider.isLoggingIn
+                                ? const CircularProgressIndicator(color: Colors.white)
+                                : const Text(
+                              "Log In",
+                              style: TextStyle(fontSize: 25, color: Colors.white, fontWeight: FontWeight.bold),
+                            ),
                           ),
-                          minimumSize: const Size(double.infinity, 50),
-                        ),
-                        child: isLoggingIn
-                            ? const CircularProgressIndicator(color: Colors.white)
-                            : const Text(
-                          "Log In",
-                          style: TextStyle(fontSize: 25, color: Colors.white, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      const Text("If you have not registered please click on"),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.push(context, MaterialPageRoute(builder: (context)=>RegisterPage()));
-                        },
-                        child: const Text("Register"),
-                      ),
-                    ],
+                          const SizedBox(height: 10),
+                          const Text("If you have not registered please click on"),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.push(context, MaterialPageRoute(builder: (context)=>RegisterPage()));
+                            },
+                            child: const Text("Register"),
+                          ),
+                        ],
+                      );
+                    },
                   ),
                 ),
               ),
@@ -155,70 +155,26 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  // Login function to authenticate user
-  void loginUser() async {
-    setState(() {
-      isLoggingIn = true; // Set loading state
-    });
-
+  void loginUser(UserProvider authProvider) async {
     try {
-      // Sign in with Firebase Auth
-      UserCredential userCredential = await authentication.signInWithEmailAndPassword(
-        email: emailController.text.trim(),
-        password: passwordController.text.trim(),
+      String? role = await authProvider.loginUser(
+        emailController.text.trim(),
+        passwordController.text.trim(),
       );
 
-      // Get the user ID
-      String uid = userCredential.user?.uid ?? '';
-
-      // References to the Employee, MD, and Manager nodes
-      DatabaseReference employeeRef = dref.child("Employee/$uid");
-      DatabaseReference mdRef = dref.child("MD/$uid");
-      DatabaseReference managerRef = dref.child("Manager/$uid");
-
-      // Check if user is in the Employee node
-      DataSnapshot employeeSnapshot = await employeeRef.get();
-      if (employeeSnapshot.exists) {
-        // Handle successful login for Employee
+      if (role != null) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) =>  DashboardPage()), // Replace with your Employee page
+          MaterialPageRoute(builder: (context) => DashboardPage(role: role)), // Pass the role if needed
         );
       } else {
-        // Check if user is in the MD node
-        DataSnapshot mdSnapshot = await mdRef.get();
-        if (mdSnapshot.exists) {
-          // Handle successful login for MD
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) =>  DashboardPage()), // Replace with your MD page
-          );
-        } else {
-          // Check if user is in the Manager node
-          DataSnapshot managerSnapshot = await managerRef.get();
-          if (managerSnapshot.exists) {
-            // Handle successful login for Manager
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) =>  DashboardPage()), // Replace with your Manager page
-            );
-          } else {
-            // User not found in any node
-            _showSnackbar(context, 'User data not found in Employee, MD, or Manager nodes.');
-          }
-        }
+        _showSnackbar(context, 'User data not found in Employee, MD, or Manager nodes.');
       }
-    } on FirebaseAuthException catch (e) {
-      // Handle authentication errors
-      _showSnackbar(context, 'Error: ${e.message}');
-    } finally {
-      setState(() {
-        isLoggingIn = false; // Reset loading state
-      });
+    } catch (e) {
+      _showSnackbar(context, 'Error: $e');
     }
   }
 
-  // Helper method to show a snackbar
   void _showSnackbar(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }

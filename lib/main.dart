@@ -1,7 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:human_capital_management/Front%20side/Loginpage.dart';
 import 'Front side/dashBoard.dart';
+import 'Providers/employeeProvider.dart';
 import 'Providers/goalProvider.dart';
 import 'Providers/usermodel.dart';
 import 'Providers/userprovider.dart';
@@ -16,9 +18,11 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform, // Use the generated options
   );
 
+  // Set persistence to LOCAL to maintain session on app restart
+  await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
+
   runApp(MyApp());
 }
-
 
 class MyApp extends StatelessWidget {
   @override
@@ -31,14 +35,26 @@ class MyApp extends StatelessWidget {
       ],
       child: MaterialApp(
         routes: {
-          '/frontPage': (context) =>  DashboardPage(),
-          '/login': (context) =>  LoginPage(),
-
-          //sdjkaslkd
+          '/frontPage': (context) => DashboardPage(role: ''),
+          '/login': (context) => LoginPage(),
         },
         title: 'HCM-Human Capital Management',
         debugShowCheckedModeBanner: false,
-        home: const LoginPage(), // Ensure RegisterPage is used properly
+        home: StreamBuilder<User?>(
+          stream: FirebaseAuth.instance.authStateChanges(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              // While checking auth state, show a loading indicator
+              return Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasData) {
+              // User is logged in
+              return DashboardPage(role: ''); // You can pass the user's role if needed
+            }
+            // User is not logged in
+            return LoginPage();
+          },
+        ),
       ),
     );
   }
