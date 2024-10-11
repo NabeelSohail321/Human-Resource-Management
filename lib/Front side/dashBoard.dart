@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:human_capital_management/Front%20side/total_departs.dart';
 import 'package:human_capital_management/Front%20side/totalgoalsachieved.dart';
 import 'package:provider/provider.dart';
 import '../Providers/usermodel.dart';
@@ -27,12 +28,6 @@ class _DashboardPageState extends State<DashboardPage>
   void initState() {
     super.initState();
 
-    // Fetch user details when the DashboardPage is initialized
-    user = FirebaseAuth.instance.currentUser; // Get the current user
-    if (user != null) {
-      Provider.of<UserModel>(context, listen: false).fetchUserDetails(user!.uid);
-    }
-
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
@@ -41,10 +36,18 @@ class _DashboardPageState extends State<DashboardPage>
     _slideAnimation = Tween<Offset>(begin: const Offset(-1.0, 0.0), end: Offset.zero)
         .animate(CurvedAnimation(parent: _animationController, curve: Curves.easeInOut));
 
-    // Content slide animation
     _contentSlideAnimation = Tween<Offset>(begin: Offset.zero, end: const Offset(0.18, 0.0))
         .animate(CurvedAnimation(parent: _animationController, curve: Curves.easeInOut));
+
+    // Delay fetch operation until the first frame is rendered
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      user = FirebaseAuth.instance.currentUser; // Get the current user
+      if (user != null) {
+        Provider.of<UserModel>(context, listen: false).fetchUserDetails(user!.uid);
+      }
+    });
   }
+
 
   void toggleDrawer() {
     if (isDrawerOpen) {
@@ -60,6 +63,7 @@ class _DashboardPageState extends State<DashboardPage>
   @override
   Widget build(BuildContext context) {
     final userModel = Provider.of<UserModel>(context); // Listen to user model for updates
+    final screenSize = MediaQuery.of(context).size; // Get screen size
 
     return Scaffold(
       key: _scaffoldKey,
@@ -77,18 +81,24 @@ class _DashboardPageState extends State<DashboardPage>
             position: _contentSlideAnimation,
             child: Row(
               children: [
-                SizedBox(width: 10,),
+                SizedBox(width: screenSize.width*0.02,),
                 InkWell(
                   child: Card(
                     elevation: 5,
                     child: Container(
                       width: 200,
                       height: 200,
-                      child: Center(child: Text("TOTAL\nGOALS",style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold,color: Colors.blueGrey))),
+                      child: Center(child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text("TOTAL",style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold,color: Colors.blueGrey)),
+                          Text("Departs",style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold,color: Colors.blueGrey)),
+                        ],
+                      )),
                     ),
                   ),
                   onTap: (){
-                    Navigator.push(context, MaterialPageRoute(builder: (context)=>totalgoalsforEmployee()));
+                    Navigator.push(context, MaterialPageRoute(builder: (context)=>DepartmentListPage()));
                   },
                 ),
 
@@ -103,8 +113,8 @@ class _DashboardPageState extends State<DashboardPage>
           ),
 
           // Placeholder or content while loading user details
-          // if (userModel.isLoading) // Assuming you have a loading state in UserModel
-          //   Center(child: CircularProgressIndicator()),
+          if (userModel.isLoading) // Assuming you have a loading state in UserModel
+            Center(child: CircularProgressIndicator()),
         ],
       ),
     );

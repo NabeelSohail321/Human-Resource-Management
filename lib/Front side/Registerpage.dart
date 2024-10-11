@@ -1,5 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../Providers/userprovider.dart';
@@ -13,39 +11,42 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
-  final authentication = FirebaseAuth.instance;
   final nc = TextEditingController();
   final ec = TextEditingController();
   final phonec = TextEditingController();
   final pass = TextEditingController();
-  final DatabaseReference dref = FirebaseDatabase.instance.ref();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  bool _isLoading = false; // Add loading state
 
-  @override
-  void initState() {
-    super.initState();
-    // Check if the first user is registering to assign the role correctly
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<UserProvider>(context, listen: false).checkFirstUser();
-    });
-  }
+  Future<void> _register() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true; // Set loading state to true
+      });
 
-  void registerUser() async {
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
-    try {
-      await userProvider.registerUser(
-        name: nc.text.trim(),
-        email: ec.text.trim(),
-        phone: phonec.text.trim(),
-        password: pass.text.trim(),
-      );
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('User registered successfully!')));
-      Navigator.push(
-          context, MaterialPageRoute(builder: (context) => LoginPage()));
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())));
+      try {
+        // Call the registerUser method from UserProvider
+        await Provider.of<UserProvider>(context, listen: false)
+            .registerUser(nc.text, ec.text, phonec.text, pass.text);
+
+        // Clear text fields after registration
+        nc.clear();
+        ec.clear();
+        phonec.clear();
+        pass.clear();
+
+        // Navigate to the login page
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginPage()),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      } finally {
+        setState(() {
+          _isLoading = false; // Reset loading state
+        });
+      }
     }
   }
 
@@ -54,184 +55,163 @@ class _RegisterPageState extends State<RegisterPage> {
     return Scaffold(
       body: Stack(
         children: [
-        // Full-screen grey container
-        Container(
-        color: Colors.grey,
-        width: double.infinity,
-        height: double.infinity,
-        child: Stack(
+          // Full-screen grey container
+          Container(
+            color: Colors.grey,
+            width: double.infinity,
+            height: double.infinity,
+            child: Stack(
+              children: [
+                Container(
+                  height: MediaQuery.of(context).size.height * 0.3,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.green,
+                    borderRadius: BorderRadius.only(
+                      bottomRight: Radius.circular(280),
+                    ),
+                  ),
+                  child: Align(
+                    alignment: Alignment.bottomLeft,
+                    child: Image(image: AssetImage('assets/images/login.png')),
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Container(
+                    height: MediaQuery.of(context).size.height * 0.3,
+                    decoration: BoxDecoration(
+                      color: Colors.green,
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(280),
+                      ),
+                    ),
+                  ),
+                )
+              ],
+            ),
+          ),
 
-          children: [
-            Container(
-              height: MediaQuery
-                  .of(context)
-                  .size
-                  .height * 0.3,
-              width: double.infinity,
+          // Centered container on top of the grey container
+          Center(
+            child: Container(
+              width: MediaQuery.of(context).size.width * 0.85, // Responsive width
               decoration: BoxDecoration(
-                color: Colors.green,
-                borderRadius: BorderRadius.only(
-                  // bottomLeft: Radius.circular(0),
-                  bottomRight: Radius.circular(280),
-
-                ),
+                color: Colors.white,
+                border: Border.all(width: 1),
+                borderRadius: BorderRadius.circular(20),
               ),
-              child: Align(
-                alignment: Alignment.bottomLeft,
-                child: Image(image: AssetImage('assets/images/login.png'),
-                ),
-              ),
-            ),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Container(
-                height: MediaQuery
-                    .of(context)
-                    .size
-                    .height * 0.3,
-                decoration: BoxDecoration(
-                  color: Colors.green,
-                  borderRadius: BorderRadius.only(
-                    // bottomLeft: Radius.circular(0),
-                    topLeft: Radius.circular(280),
-
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min, // Wrap content tightly
+                    children: [
+                      TextField(
+                        controller: nc,
+                        decoration: const InputDecoration(
+                          hintText: "Enter Your Name",
+                          labelText: "Name",
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(15)),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10), // Add spacing between fields
+                      TextFormField(
+                        controller: ec,
+                        decoration: const InputDecoration(
+                          hintText: "Enter Your Email Address",
+                          labelText: "Email",
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(15)),
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your email address';
+                          }
+                          // Email regex pattern
+                          String pattern =
+                              r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$';
+                          RegExp regex = RegExp(pattern);
+                          if (!regex.hasMatch(value)) {
+                            return 'Please enter a valid email address';
+                          }
+                          return null; // Return null if the input is valid
+                        },
+                      ),
+                      const SizedBox(height: 10),
+                      TextFormField(
+                        controller: phonec,
+                        decoration: const InputDecoration(
+                          hintText: "Enter Your Phone No",
+                          labelText: "Phone No",
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(15)),
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your phone number';
+                          }
+                          // Phone number regex pattern for Pakistani numbers
+                          String pattern =
+                              r'^(03[0-9]{9}|\+92[0-9]{10})$';
+                          RegExp regex = RegExp(pattern);
+                          if (!regex.hasMatch(value)) {
+                            return 'Please enter a valid Pakistani phone number';
+                          }
+                          return null; // Return null if the input is valid
+                        },
+                      ),
+                      const SizedBox(height: 10),
+                      TextField(
+                        controller: pass,
+                        decoration: const InputDecoration(
+                          hintText: "Enter Your Password",
+                          labelText: "Password",
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(15)),
+                          ),
+                        ),
+                        obscureText: true,
+                      ),
+                      const SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: _isLoading ? null : _register, // Disable button if loading
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.black,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          minimumSize: const Size(double.infinity, 50), // Make button full width
+                        ),
+                        child: _isLoading // Show loading indicator if loading
+                            ? const CircularProgressIndicator(color: Colors.white)
+                            : const Text(
+                          "Register",
+                          style: TextStyle(fontSize: 25, color: Colors.white, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      const Text("If you are already registered, please click on"),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.push(context, MaterialPageRoute(
+                              builder: (context) => const LoginPage()));
+                        },
+                        child: const Text("Login"),
+                      ),
+                    ],
                   ),
                 ),
               ),
-            )
-
-          ],
-        ),
+            ),
+          )
+        ],
       ),
-
-      // Centered container on top of the grey container
-      Center(
-        child: Container(
-
-          width: MediaQuery
-              .of(context)
-              .size
-              .width * 0.85, // Responsive width
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(width: 1),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            // Added padding around the container
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min, // Wrap content tightly
-                children: [
-                  TextField(
-                    controller: nc,
-                    decoration: const InputDecoration(
-                      hintText: "Enter Your Name",
-                      labelText: "Name",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(15)),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 10), // Add spacing between fields
-                  TextFormField(
-                    controller: ec,
-                    decoration: const InputDecoration(
-                      hintText: "Enter Your Email Address",
-                      labelText: "Email",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(15)),
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your email address';
-                      }
-                      // Email regex pattern
-                      String pattern =
-                          r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$';
-                      RegExp regex = RegExp(pattern);
-                      if (!regex.hasMatch(value)) {
-                        return 'Please enter a valid email address';
-                      }
-                      return null; // Return null if the input is valid
-                    },
-                  ),
-                  const SizedBox(height: 10),
-                  TextFormField(
-                    controller: phonec,
-                    decoration: const InputDecoration(
-                      hintText: "Enter Your Phone No",
-                      labelText: "Phone No",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(15)),
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your phone number';
-                      }
-                      // Phone number regex pattern for Pakistani numbers
-                      String pattern =
-                          r'^(03[0-9]{9}|\+92[0-9]{10})$';
-                      RegExp regex = RegExp(pattern);
-                      if (!regex.hasMatch(value)) {
-                        return 'Please enter a valid Pakistani phone number';
-                      }
-                      return null; // Return null if the input is valid
-                    },
-                  ),                const SizedBox(height: 10),
-                  TextField(
-                    controller: pass,
-                    decoration: const InputDecoration(
-                      hintText: "Enter Your Password",
-                      labelText: "Password",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(15)),
-                      ),
-                    ),
-                    obscureText: true,
-                  ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()){
-                        registerUser();
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      minimumSize: const Size(
-                          double.infinity, 50), // Make button full width
-                    ),
-                    child: const Text(
-                      "Register",
-                      style: TextStyle(fontSize: 25,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  const Text("If you are already registered, please click on"),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.push(context, MaterialPageRoute(
-                          builder: (context) => const LoginPage()));
-                    },
-                    child: const Text("Login"),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      )
-      ],
-    ),);
+    );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:human_capital_management/Models/datamodel.dart';
 
 class UserProvider extends ChangeNotifier {
 
@@ -21,7 +22,31 @@ class UserProvider extends ChangeNotifier {
   String? get userRole => _userRole; // Getter for user role
   bool _isLoggingIn = false;
   bool get isLoggingIn => _isLoggingIn;
+  Map<String, String> departments = {};
 
+  List<Map<String, dynamic>>_departments = [];
+
+
+  List<Map<String, dynamic>> get depart => _departments;
+
+
+  Future<void> fetchtotalDepartments() async {
+    try {
+      final DatabaseEvent event = await _dbRef.child('departments').once();
+      if (event.snapshot.value != null) {
+        final Map<dynamic, dynamic> departmentsData = event.snapshot.value as Map<dynamic, dynamic>;
+        _departments = departmentsData.entries.map((entry) {
+          return {
+            'departId': entry.key,
+            'name': entry.value['name'],
+          };
+        }).toList();
+        notifyListeners(); // Notify listeners that data has changed
+      }
+    } catch (error) {
+      print('Error fetching departments: $error');
+    }
+  }
 
   Future<int> _getHighestManagerNumber() async {
     int highestManagerNumber = 0;
@@ -45,78 +70,53 @@ class UserProvider extends ChangeNotifier {
     return highestManagerNumber;
   }
 
-  Future<void> checkFirstUser() async {
-    final hrSnapshot = await _dbRef.child("MD").once();
-    _isFirstUser = hrSnapshot.snapshot.value == null;
-    notifyListeners();
-  }
-
-  Future<void> registerUser({
-    required String name,
-    required String email,
-    required String phone,
-    required String password,
-  }) async {
+  Future<void> registerUser(String name, String email, String phone, String password) async {
     try {
-      // Register user with Firebase Authentication
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(email: email, password: password);
-      String userId = userCredential.user!.uid;
+      // Create a new user with Firebase Authentication
+      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+        email: email.trim(),
+        password: password.trim(),
+      );
 
-      // If this is the first user, assign them as MD (role 0), otherwise assign them as Employee (role 1)
-      String role = _isFirstUser ? "0" : "1";
-      String node = _isFirstUser ? "MD" : "Employee";
-
+      // User's UID
       String uid = userCredential.user!.uid;
 
-      // If the user is not the first user (i.e., they are an employee), generate an employee number
-      String? employeeNumber;
-      if (!_isFirstUser) {
-        // Get the current number of employees and managers to generate the next employee number
-        DataSnapshot employeeSnapshot = await _dbRef.child("Employee").get();
-        DataSnapshot managerSnapshot = await _dbRef.child("Manager").get();
+      // Check if there are any registered users in the MD node
+      DatabaseEvent event = await _dbRef.child('MD').once();
+      bool isFirstUser = event.snapshot.children.isEmpty; // Check if the MD node is empty
 
-        // Find the highest existing employee number from both Employee and Manager nodes
-        int highestEmployeeNumber = 0;
-        for (var snapshot in [employeeSnapshot, managerSnapshot]) {
-          if (snapshot.exists) {
-            final data = Map<String, dynamic>.from(snapshot.value as Map);
-            for (var user in data.values) {
-              final userMap = Map<String, dynamic>.from(user);
-              if (userMap['employeeNumber'] != null) {
-                final numberString = (userMap['employeeNumber'] as String).split('-').last;
-                final number = int.tryParse(numberString) ?? 0;
-                if (number > highestEmployeeNumber) {
-                  highestEmployeeNumber = number;
-                }
-              }
-            }
-          }
-        }
-        employeeNumber = 'EMP-${highestEmployeeNumber + 1}'; // Generate a new unique employee number
+      // Prepare user data
+      Map<String, dynamic> userData = {
+        'name': name.trim(),
+        'email': email.trim(),
+        'phone': phone.trim(),
+        'password': password.trim(),
+        'uid': uid,
+        'Registration Date': DateTime.now().toString(),
+        'role': isFirstUser ? 0 : 1, // Role for MD is 0, for Employee is 1
+      };
+
+      if (isFirstUser) {
+        // Add the first user to the MD node
+        await _dbRef.child('MD').child(uid).set(userData);
+      } else {
+        // Add all subsequent users to the Employees node
+        int employeeNumber = (await _dbRef.child('Employee').once()).snapshot.children.length + 1; // Generate employee number
+        // userData['employeeNumber'] = employeeNumber;
+          userData['employeeNumber'] = "EMP- ${employeeNumber}";
+
+        // Add subsequent users to the Employees node
+        await _dbRef.child('Employee').child(uid).set(userData);
       }
 
-      // Save user information in the correct node with employee number if applicable
-      await _dbRef.child(node).child(userId).set({
-        "name": name,
-        "email": email,
-        "phone": phone,
-        "role": role,
-        "password": password,
-        "uid": uid,
-        "employeeNumber": employeeNumber, // Add employee number if applicable
-        "Registration Date": DateTime.now().toString(),
-      });
-
-      // If the first user is registered, mark the first user flag as false
-      if (_isFirstUser) {
-        _isFirstUser = false;
-      }
-
-      notifyListeners();
+      // Clear text fields after registration
+      // Optional: notifyListeners() can be called if you have UI to update
     } on FirebaseAuthException catch (e) {
-      throw Exception("Error registering user: ${e.message}");
+      throw e; // Rethrow the error to handle it in the UI
     }
   }
+
+
 
 
 
@@ -251,7 +251,6 @@ class UserProvider extends ChangeNotifier {
     }
   }
 
-
   Future<void> updateUserRole(String uid, String newRole) async {
     try {
       // Check which node the user is currently in
@@ -351,68 +350,64 @@ class UserProvider extends ChangeNotifier {
     return highestEmployeeNumber;
   }
 
+
   Future<String?> loginUser(String email, String password) async {
-    _isLoggingIn = true;
+    _isLoggingIn = true; // Set loading state
     notifyListeners(); // Notify listeners about the loading state
 
     try {
+      // Authenticate the user
       UserCredential userCredential = await _auth.signInWithEmailAndPassword(
         email: email.trim(),
         password: password.trim(),
       );
 
+      // Get the user's UID
       _user = userCredential.user;
 
-      // After successful login, check user roles
-      String? role = await checkUserRole();
-      return role; // Return the role if found
+      // Check user role
+      String? role = await checkUserRole(_user!.uid);
+      return role; // Return the user's role if found
     } on FirebaseAuthException catch (e) {
       throw Exception('Login failed: ${e.message}');
     } finally {
-      _isLoggingIn = false;
+      _isLoggingIn = false; // Reset loading state
       notifyListeners(); // Notify listeners about the loading state
     }
   }
 
-
-  Future<String?> checkUserRole() async {
-    if (_user == null) {
-      return null; // User not logged in
-    }
-
+  Future<String?> checkUserRole(String uid) async {
     // Define references for all roles
     DatabaseReference employeeRef = _dbRef.child("Employee");
     DatabaseReference mdRef = _dbRef.child("MD");
+
+    // Check if the user exists in the Employee node
+    DatabaseEvent employeeEvent = await employeeRef.child(uid).once();
+    if (employeeEvent.snapshot.exists) {
+      // User is an Employee
+      return "Employee (Role 1)";
+    }
+
+    // Check if the user exists in the MD node
+    DatabaseEvent mdEvent = await mdRef.child(uid).once();
+    if (mdEvent.snapshot.exists) {
+      // User is an MD
+      return "MD (Role 0)";
+    }
+
+    // If you have a Manager node, check it here
     DatabaseReference managerRef = _dbRef.child("Manager");
-
-    // Check if the user exists in Employee node
-    DatabaseEvent employeeEvent = await employeeRef.orderByChild('email').equalTo(_user!.email).once();
-    DataSnapshot employeeSnapshot = employeeEvent.snapshot;
-    print('Employee Snapshot: ${employeeSnapshot.value}');
-    if (employeeSnapshot.exists) {
-      return "Employee"; // User is an Employee
+    DatabaseEvent managerEvent = await managerRef.child(uid).once();
+    if (managerEvent.snapshot.exists) {
+      // User is a Manager
+      return "Manager"; // Adjust as necessary
     }
 
-    // Check if the user exists in MD node
-    DatabaseEvent mdEvent = await mdRef.orderByChild('email').equalTo(_user!.email).once();
-    DataSnapshot mdSnapshot = mdEvent.snapshot;
-    print('MD Snapshot: ${mdSnapshot.value}');
-    if (mdSnapshot.exists) {
-      return "MD"; // User is an MD
-    }
-
-    // Check if the user exists in Manager node
-    // DatabaseEvent managerEvent = await managerRef.orderByChild('email').equalTo(_user!.email).once();
-    DatabaseEvent managerEvent = await managerRef.orderByChild('email').equalTo(_user!.email!.toLowerCase()).once();
-
-    DataSnapshot managerSnapshot = managerEvent.snapshot;
-    print('Manager Snapshot: ${managerSnapshot.value}');
-    if (managerSnapshot.exists) {
-      return "Manager"; // User is a Manager
-    }
-
-    return null; // User role not found
+    // User role not found
+    return null;
   }
+
+
 
   Future<void> fetchEmployees() async {
     _isLoading = true;  // Set loading state to true
@@ -509,22 +504,83 @@ class UserProvider extends ChangeNotifier {
     try {
       // Assuming you have a database reference to add a new department
       final newDepartmentRef = _dbRef.child('departments').push();
-      await newDepartmentRef.set({'name': departmentName});
+      final departmentId = newDepartmentRef.key; // Get the unique ID generated by Firebase
+
+      await newDepartmentRef.set({
+        'departId': departmentId, // Add the departId to the node
+        'name': departmentName,
+      });
+
       notifyListeners(); // Notify listeners about the change
     } catch (error) {
       print('Error adding department: $error');
     }
   }
 
-  Future<void> updateUserDepartment(String userId, String department) async {
+
+
+  Future<void> fetchDepartments() async {
+    // Example Firebase logic (adjust based on your database):
+    final departmentData = await FirebaseDatabase.instance.ref('departments').get();
+
+    // Clear existing departments
+    departments.clear();
+
+    if (departmentData.exists) {
+      // Explicitly cast the fetched value to a Map<dynamic, dynamic>
+      Map<dynamic, dynamic> departmentMap = departmentData.value as Map<dynamic, dynamic>;
+
+      departmentMap.forEach((key, value) {
+        // Ensure that the value is a Map and has the 'name' field before assigning
+        if (value is Map && value.containsKey('name')) {
+          departments[key] = value['name'];
+        }
+      });
+    }
+
+    notifyListeners();
+  }
+
+  Future<void> updateUserDepartment(String uid, String newDepartmentName) async {
     try {
-      // Assuming you have a database reference to update the department
-      await _dbRef.child('users/$userId').update({'department': department});
-      notifyListeners(); // Notify listeners about the change
-    } catch (error) {
-      print('Error updating department: $error');
+      // Check which node the user is currently in
+      DataSnapshot employeeSnapshot = await _employeeRef.child(uid).get();
+      DataSnapshot hrSnapshot = await _mdRef.child(uid).get();
+      DataSnapshot managerSnapshot = await _managerRef.child(uid).get();
+      Map<String, dynamic>? userData;
+      DatabaseReference currentUserRef;
+
+      // Identify the user's current node and retrieve their data
+      if (employeeSnapshot.exists) {
+        userData = Map<String, dynamic>.from(employeeSnapshot.value as Map);
+        currentUserRef = _employeeRef.child(uid);
+      } else if (hrSnapshot.exists) {
+        userData = Map<String, dynamic>.from(hrSnapshot.value as Map);
+        currentUserRef = _mdRef.child(uid);
+      } else if (managerSnapshot.exists) {
+        userData = Map<String, dynamic>.from(managerSnapshot.value as Map);
+        currentUserRef = _managerRef.child(uid);
+      } else {
+        print('User not found in any node.');
+        return; // Exit if the user is not found in any node
+      }
+
+      // Update the user's department within their current node
+      if (userData != null) {
+        // Add or update the department field in the user's data
+        await currentUserRef.update({
+          'department': newDepartmentName,
+        });
+
+        print('User department updated successfully to $newDepartmentName.');
+
+        fetchUsers(); // Refresh the list of users after the update
+      }
+    } catch (e) {
+      print('Error updating user department: $e');
     }
   }
+
 
 
 }
