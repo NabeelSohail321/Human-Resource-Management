@@ -27,11 +27,41 @@ class DepartmentListPage extends StatelessWidget {
                   itemCount: departments.length,
                   itemBuilder: (context, index) {
                     final department = departments[index];
-                    final departmentName = department['name'] ?? 'Unknown';
+                    final departmentName = department['departName'] ?? 'Unknown'; // Make sure to match the correct key
                     final departmentId = department['departId'] ?? 'Unknown';
+
                     return ListTile(
                       title: Text(departmentName),
                       subtitle: Text('ID: $departmentId'),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: () {
+                          // Show a confirmation dialog before deleting
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Confirm Deletion'),
+                              content: const Text('Are you sure you want to delete this department?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop(); // Close the dialog
+                                  },
+                                  child: const Text('Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed: () async {
+                                    // Call the delete method
+                                    await userProvider.deleteDepartment(departmentId);
+                                    Navigator.of(context).pop(); // Close the dialog
+                                  },
+                                  child: const Text('Delete'),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
                     );
                   },
                 );

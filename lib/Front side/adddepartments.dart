@@ -45,21 +45,29 @@ class _AddDepartmentPageState extends State<AddDepartmentPage> {
     );
   }
 
-  void _addDepartment() {
+  void _addDepartment() async {
     final departmentName = _departmentController.text.trim();
 
     if (departmentName.isNotEmpty) {
-      // Call the provider method to add the department to the database
-      Provider.of<UserProvider>(context, listen: false).addDepartment(departmentName);
-      // Optionally show a success message or navigate back
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Department "$departmentName" added successfully!')),
-      );
-      _departmentController.clear(); // Clear the text field
+      final result = await Provider.of<UserProvider>(context, listen: false).addDepartment(departmentName);
+
+      if (result) {
+        // Show a success message if the department was added
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Department "$departmentName" added successfully!')),
+        );
+        _departmentController.clear(); // Clear the text field
+      } else {
+        // Show a message if the department already exists
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Department "$departmentName" already exists.')),
+        );
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enter a department name.')),
       );
     }
   }
+
 }

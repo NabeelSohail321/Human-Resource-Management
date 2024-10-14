@@ -1,7 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:human_capital_management/Front%20side/total_departs.dart';
-import 'package:human_capital_management/Front%20side/totalgoalsachieved.dart';
+import 'package:human_capital_management/Front%20side/totalmanagerslistpage.dart';
+import 'package:human_capital_management/Front%20side/totalresticationpage.dart';
 import 'package:provider/provider.dart';
 import '../Providers/usermodel.dart';
 import 'drawerfile.dart'; // Assuming this contains your custom drawer
@@ -88,7 +89,7 @@ class _DashboardPageState extends State<DashboardPage>
                     child: Container(
                       width: 200,
                       height: 200,
-                      child: Center(child: Column(
+                      child: const Center(child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text("TOTAL",style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold,color: Colors.blueGrey)),
@@ -101,6 +102,46 @@ class _DashboardPageState extends State<DashboardPage>
                     Navigator.push(context, MaterialPageRoute(builder: (context)=>DepartmentListPage()));
                   },
                 ),
+                SizedBox(width: screenSize.width*0.02,),
+                InkWell(
+                  child: Card(
+                    elevation: 5,
+                    child: Container(
+                      width: 200,
+                      height: 200,
+                      child: const Center(child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text("TOTAL",style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold,color: Colors.blueGrey)),
+                          Text("Managers",style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold,color: Colors.blueGrey)),
+                        ],
+                      )),
+                    ),
+                  ),
+                  onTap: (){
+                    Navigator.push(context, MaterialPageRoute(builder: (context)=>const ManagersListPage()));
+                  },
+                ),
+                SizedBox(width: screenSize.width*0.02,),
+                InkWell(
+                  child: Card(
+                    elevation: 5,
+                    child: Container(
+                      width: 200,
+                      height: 200,
+                      child: const Center(child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text("TOTAL",style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold,color: Colors.blueGrey)),
+                          Text("Resticated",style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold,color: Colors.blueGrey)),
+                        ],
+                      )),
+                    ),
+                  ),
+                  onTap: (){
+                    Navigator.push(context, MaterialPageRoute(builder: (context)=>const ResticatedListPage()));
+                  },
+                ),
 
               ],
             ),
@@ -109,12 +150,12 @@ class _DashboardPageState extends State<DashboardPage>
           // Animated Drawer
           SlideTransition(
             position: _slideAnimation,
-            child: Drawerfrontside(), // Replace with your custom drawer
+            child: const Drawerfrontside(), // Replace with your custom drawer
           ),
 
           // Placeholder or content while loading user details
-          if (userModel.isLoading) // Assuming you have a loading state in UserModel
-            Center(child: CircularProgressIndicator()),
+          // if (userModel.isLoading) // Assuming you have a loading state in UserModel
+          //   Center(child: CircularProgressIndicator()),
         ],
       ),
     );

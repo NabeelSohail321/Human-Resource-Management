@@ -21,9 +21,11 @@ class _SuperAdminPanelState extends State<SuperAdminPanel> {
     });
   }
 
+
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
+    final Map<String, String> departmentMap = userProvider.departments;
 
     return Scaffold(
       appBar: CustomAppBar.customAppBar("Admin Panel"),
@@ -59,6 +61,8 @@ class _SuperAdminPanelState extends State<SuperAdminPanel> {
                     children: [
                       Text("E-Mail: ${user['email'] ?? 'No Email'}"),
                       Text("Role: ${user['role'] == '0' ? 'HR' : user['role'] == '1' ? 'Employee' : 'Manager'}"),
+                      Text("Department: ${user['departmentName'] ?? 'No Department'}"), // Add this line
+
                     ],
                   ),
                   trailing: Row(
@@ -78,37 +82,33 @@ class _SuperAdminPanelState extends State<SuperAdminPanel> {
                           }
                         },
                       ),
-                      const SizedBox(width: 10), // Spacing between dropdowns
-
-                      // Department Dropdown
                       DropdownButton<String>(
-                        value: selectedDepartmentId,
+                        value: selectedDepartmentId, // Use selectedDepartmentId here
                         items: [
                           const DropdownMenuItem(
                             value: 'no_department',
                             child: Text('No Department Selected'),
                           ),
-                          ...userProvider.departments.entries.map((entry) {
+                          ...departmentMap.entries.map((entry) {
                             return DropdownMenuItem<String>(
                               value: entry.key, // departmentId
                               child: Text(entry.value), // departmentName
                             );
                           }).toList(),
                         ],
-                        onChanged: (newDepartmentName) {
-                          if (newDepartmentName != null) {
-                            setState(() {
-                              selectedDepartmentId = newDepartmentName;
-                            });
-
-                            // Call the function to update the user's department in the correct node
-                            userProvider.updateUserDepartment(user['name'], newDepartmentName == 'no_department' ? '' : newDepartmentName);
+                        onChanged: (newDepartmentId) {
+                          if (newDepartmentId != null) {
+                          // Update department using the selected department ID
+                            String newDepartmentName = departmentMap[newDepartmentId] ?? '';
+                            userProvider.updateUserDepartment(user['uid'], newDepartmentName);
                           }
-                        },
-                      ),
+                        },                      ),
+                      const SizedBox(width: 10), // Spacing between dropdowns
+                      Text("Status: ${user['user status'] ?? 'No Status'}", style: const TextStyle(color: Colors.blue)),
                     ],
                   ),
                 );
+
               },
             ),
           ],

@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:human_capital_management/Front%20side/Loginpage.dart';
 import 'Front side/dashBoard.dart';
-import 'Providers/employeeProvider.dart';
-import 'Providers/goalProvider.dart';
+import 'Providers/managerprovider.dart';
+import 'Providers/resticatedprovider.dart';
 import 'Providers/usermodel.dart';
 import 'Providers/userprovider.dart';
 import 'firebase_options.dart';
@@ -30,8 +30,11 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => UserProvider()), // Provide the UserProvider
-        ChangeNotifierProvider(create: (context) => GoalProvider()),
         ChangeNotifierProvider(create: (context) => UserModel()),
+        ChangeNotifierProvider(create: (context) => ManagersProvider()),
+        ChangeNotifierProvider(create: (_) => resticatedUsersProvider()),
+
+
       ],
       child: MaterialApp(
         routes: {

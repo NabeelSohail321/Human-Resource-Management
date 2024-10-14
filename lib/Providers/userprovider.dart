@@ -1,7 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-import 'package:human_capital_management/Models/datamodel.dart';
 
 class UserProvider extends ChangeNotifier {
 
@@ -23,11 +22,9 @@ class UserProvider extends ChangeNotifier {
   bool _isLoggingIn = false;
   bool get isLoggingIn => _isLoggingIn;
   Map<String, String> departments = {};
-
   List<Map<String, dynamic>>_departments = [];
-
-
   List<Map<String, dynamic>> get depart => _departments;
+
 
 
   Future<void> fetchtotalDepartments() async {
@@ -38,7 +35,7 @@ class UserProvider extends ChangeNotifier {
         _departments = departmentsData.entries.map((entry) {
           return {
             'departId': entry.key,
-            'name': entry.value['name'],
+            'departName': entry.value['departName'],
           };
         }).toList();
         notifyListeners(); // Notify listeners that data has changed
@@ -92,6 +89,7 @@ class UserProvider extends ChangeNotifier {
         'phone': phone.trim(),
         'password': password.trim(),
         'uid': uid,
+        'user status': "Active",
         'Registration Date': DateTime.now().toString(),
         'role': isFirstUser ? 0 : 1, // Role for MD is 0, for Employee is 1
       };
@@ -115,10 +113,6 @@ class UserProvider extends ChangeNotifier {
       throw e; // Rethrow the error to handle it in the UI
     }
   }
-
-
-
-
 
   Future<bool> isEmailVerified() async {
     User? user = _auth.currentUser;
@@ -152,13 +146,20 @@ class UserProvider extends ChangeNotifier {
         final employeesData = Map<String, dynamic>.from(employeeSnapshot.snapshot.value as Map);
         _users.addAll(employeesData.values.map((user) {
           final map = Map<String, dynamic>.from(user);
-          return {
-            'uid': map['uid'] ?? '',
-            'name': map['name'] ?? 'Unknown',
-            'email': map['email'] ?? 'No Email',
-            'role': '1', // Role 1 for Employee
-          };
-        }).toList());
+          // Check user status before adding to _users
+          if (map['user status'] == 'Active') {
+            return {
+              'uid': map['uid'] ?? '',
+              'name': map['name'] ?? 'Unknown',
+              'email': map['email'] ?? 'No Email',
+              'departmentName': map['departmentName'] ?? 'Unknown',
+              'role': '1', // Role 1 for Employee
+              'user status': map['user status'] ?? 'No Status', // Ensure you add this line
+
+            };
+          }
+          return null; // return null if not active
+        }).whereType<Map<String, dynamic>>()); // Only keep non-null maps
       }
 
       // Fetching HR (MD)
@@ -167,13 +168,19 @@ class UserProvider extends ChangeNotifier {
         final hrData = Map<String, dynamic>.from(hrSnapshot.snapshot.value as Map);
         _users.addAll(hrData.values.map((user) {
           final map = Map<String, dynamic>.from(user);
-          return {
-            'uid': map['uid'] ?? '',
-            'name': map['name'] ?? 'Unknown',
-            'email': map['email'] ?? 'No Email',
-            'role': '0', // Role 0 for MD
-          };
-        }).toList());
+          // Check user status before adding to _users
+          if (map['user status'] == 'Active') {
+            return {
+              'uid': map['uid'] ?? '',
+              'name': map['name'] ?? 'Unknown',
+              'email': map['email'] ?? 'No Email',
+              'role': '0', // Role 0 for MD
+              'user status': map['user status'] ?? 'No Status', // Ensure you add this line
+
+            };
+          }
+          return null; // return null if not active
+        }).whereType<Map<String, dynamic>>()); // Only keep non-null maps
       }
 
       // Fetching Managers
@@ -182,13 +189,20 @@ class UserProvider extends ChangeNotifier {
         final managerData = Map<String, dynamic>.from(managerSnapshot.snapshot.value as Map);
         _users.addAll(managerData.values.map((user) {
           final map = Map<String, dynamic>.from(user);
-          return {
-            'uid': map['uid'] ?? '',
-            'name': map['name'] ?? 'Unknown',
-            'email': map['email'] ?? 'No Email',
-            'role': '2', // Role 2 for Manager
-          };
-        }).toList());
+          // Check user status before adding to _users
+          if (map['user status'] == 'Active') {
+            return {
+              'uid': map['uid'] ?? '',
+              'name': map['name'] ?? 'Unknown',
+              'email': map['email'] ?? 'No Email',
+              'departmentName': map['departmentName'] ?? 'Unknown',
+              'role': '2', // Role 2 for Manager
+              'user status': map['user status'] ?? 'No Status', // Ensure you add this line
+
+            };
+          }
+          return null; // return null if not active
+        }).whereType<Map<String, dynamic>>()); // Only keep non-null maps
       }
     } catch (e) {
       print("Error fetching users: $e");
@@ -313,6 +327,8 @@ class UserProvider extends ChangeNotifier {
           'password': userData['password'] ?? '',
           'phone': userData['phone'] ?? '',
           'role': newRole,
+          'departmentName':userData['departmentName'] ?? '',
+          'user status': userData['user status'],
           'employeeNumber': employeeNumber, // Add or retain employee number as necessary
           'managerNumber': managerNumber, // Add manager number for Manager role
           'Registration Date': userData['Registration Date'] ?? '',
@@ -349,7 +365,6 @@ class UserProvider extends ChangeNotifier {
     }
     return highestEmployeeNumber;
   }
-
 
   Future<String?> loginUser(String email, String password) async {
     _isLoggingIn = true; // Set loading state
@@ -407,117 +422,48 @@ class UserProvider extends ChangeNotifier {
     return null;
   }
 
-
-
-  Future<void> fetchEmployees() async {
-    _isLoading = true;  // Set loading state to true
-    _users.clear();     // Clear the existing users list
-    notifyListeners();  // Notify listeners to update the UI
-
+  Future<bool> addDepartment(String departmentName) async {
     try {
-      // Fetching employees from the Employee node
-      final employeeSnapshot = await _employeeRef.once();
+      // Check if the department name already exists
+      final DatabaseEvent existingDepartmentsEvent = await _dbRef.child('departments').once();
+      final DataSnapshot existingDepartmentsSnapshot = existingDepartmentsEvent.snapshot;
+      final Map<dynamic, dynamic>? existingDepartments = existingDepartmentsSnapshot.value as Map<dynamic, dynamic>?;
 
-      if (employeeSnapshot.snapshot.value != null) {
-        final employeesData = Map<String, dynamic>.from(employeeSnapshot.snapshot.value as Map);
+      bool departmentExists = false;
 
-        // Add each employee's data to the _users list
-        _users.addAll(employeesData.values.map((user) {
-          final map = Map<String, dynamic>.from(user);
-          return {
-            'uid': map['uid'] ?? '',
-            'name': map['name'] ?? 'Unknown',
-            'email': map['email'] ?? 'No Email',
-            'role': '1', // Role 1 for Employee
-          };
-        }).toList());
-      }
-    } catch (e) {
-      print("Error fetching employees: $e");
-    } finally {
-      _isLoading = false;  // Set loading state to false
-      notifyListeners();    // Notify listeners to update the UI
-    }
-  }
+      // Convert the input department name to lowercase
+      String lowerCaseDepartmentName = departmentName.toLowerCase();
 
-  Future<void> toggleUserActiveStatus(String uid, bool isActive) async {
-    try {
-      // Determine the current user's node (MD, Employee, or Manager)
-      DataSnapshot employeeSnapshot = await _employeeRef.child(uid).get();
-      DataSnapshot mdSnapshot = await _mdRef.child(uid).get();
-      DataSnapshot managerSnapshot = await _managerRef.child(uid).get();
-
-      if (employeeSnapshot.exists) {
-        // User is an employee, update their active status
-        await _employeeRef.child(uid).update({
-          'isActive': !isActive, // Toggle active status
+      // Check if any existing department matches the new department name (case-insensitive)
+      if (existingDepartments != null) {
+        existingDepartments.forEach((key, value) {
+          if (value['departName'].toLowerCase() == lowerCaseDepartmentName) {
+            departmentExists = true;
+          }
         });
-      } else if (mdSnapshot.exists) {
-        // User is MD, update their active status
-        await _mdRef.child(uid).update({
-          'isActive': !isActive,
-        });
-      } else if (managerSnapshot.exists) {
-        // User is a manager, update their active status
-        await _managerRef.child(uid).update({
-          'isActive': !isActive,
-        });
-      } else {
-        throw Exception("User not found");
       }
 
-      // Refresh users list after updating
-      await fetchUsers(); // You may want to refresh the users list after toggling status
-    } catch (e) {
-      print("Error toggling user active status: $e");
-    }
-  }
-
-  Future<void> deleteUser(String uid) async {
-    try {
-      // Check each node to find the user and delete them
-      DataSnapshot employeeSnapshot = await _employeeRef.child(uid).get();
-      DataSnapshot mdSnapshot = await _mdRef.child(uid).get();
-      DataSnapshot managerSnapshot = await _managerRef.child(uid).get();
-
-      if (employeeSnapshot.exists) {
-        // User is an employee, delete them
-        await _employeeRef.child(uid).remove();
-      } else if (mdSnapshot.exists) {
-        // User is MD, delete them
-        await _mdRef.child(uid).remove();
-      } else if (managerSnapshot.exists) {
-        // User is a manager, delete them
-        await _managerRef.child(uid).remove();
-      } else {
-        throw Exception("User not found");
+      if (departmentExists) {
+        print('Department "$departmentName" already exists.'); // Optionally log this
+        return false; // Return false if the department already exists
       }
 
-      // Optionally, refresh users list after deletion
-      await fetchUsers(); // Refresh users list after deletion
-    } catch (e) {
-      print("Error deleting user: $e");
-    }
-  }
-
-  Future<void> addDepartment(String departmentName) async {
-    try {
-      // Assuming you have a database reference to add a new department
+      // Add the new department if it doesn't already exist
       final newDepartmentRef = _dbRef.child('departments').push();
       final departmentId = newDepartmentRef.key; // Get the unique ID generated by Firebase
 
       await newDepartmentRef.set({
         'departId': departmentId, // Add the departId to the node
-        'name': departmentName,
+        'departName': departmentName,
       });
 
       notifyListeners(); // Notify listeners about the change
+      return true; // Return true if the department was added successfully
     } catch (error) {
       print('Error adding department: $error');
+      return false; // Optionally return false in case of an error
     }
   }
-
-
 
   Future<void> fetchDepartments() async {
     // Example Firebase logic (adjust based on your database):
@@ -532,8 +478,8 @@ class UserProvider extends ChangeNotifier {
 
       departmentMap.forEach((key, value) {
         // Ensure that the value is a Map and has the 'name' field before assigning
-        if (value is Map && value.containsKey('name')) {
-          departments[key] = value['name'];
+        if (value is Map && value.containsKey('departName')) {
+          departments[key] = value['departName'];
         }
       });
     }
@@ -569,7 +515,7 @@ class UserProvider extends ChangeNotifier {
       if (userData != null) {
         // Add or update the department field in the user's data
         await currentUserRef.update({
-          'department': newDepartmentName,
+          'departmentName': newDepartmentName, // Use the department name
         });
 
         print('User department updated successfully to $newDepartmentName.');
@@ -581,6 +527,18 @@ class UserProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> deleteDepartment(String departmentId) async {
+    try {
+      // Delete the department from the database using its ID
+      await _dbRef.child('departments').child(departmentId).remove();
+      // Remove the department from the local list
+      _departments.removeWhere((department) => department['departId'] == departmentId);
+      notifyListeners(); // Notify listeners about the change
+    } catch (error) {
+      print('Error deleting department: $error');
+      // Optionally, you can handle errors here (e.g., show a Snackbar)
+    }
+  }
 
 
 }
