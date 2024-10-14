@@ -40,6 +40,9 @@ dependencies:
   firebase_database: any
   provider: any
   fl_chart: ^0.69.0
+  intl: any
+  syncfusion_flutter_charts: ^20.3.48
+  syncfusion_flutter_gauges: ^20.3.48
 
 dev_dependencies:
   flutter_test:

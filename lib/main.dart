@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:human_capital_management/Front%20side/Loginpage.dart';
 import 'Front side/dashBoard.dart';
+import 'Front side/managerDashboard.dart';
+import 'Front side/mdDashboard.dart';
 import 'Providers/goalprovider.dart';
 import 'Providers/managerprovider.dart';
 import 'Providers/resticatedprovider.dart';
@@ -39,7 +41,9 @@ class MyApp extends StatelessWidget {
       ],
       child: MaterialApp(
         routes: {
-          '/frontPage': (context) => DashboardPage(role: ''),
+          '/frontPage': (context) => DashboardPage(),
+          '/mdpage': (context) => DashboardScreen(),
+          '/managerpage': (context) => HRDashboard(),
           '/login': (context) => LoginPage(),
         },
         title: 'HCM-Human Capital Management',
@@ -50,6 +54,27 @@ class MyApp extends StatelessWidget {
   }
 }
 
+// class AuthGate extends StatelessWidget {
+//   @override
+//   Widget build(BuildContext context) {
+//     return StreamBuilder<User?>(
+//       stream: FirebaseAuth.instance.authStateChanges(),
+//       builder: (context, snapshot) {
+//         if (snapshot.connectionState == ConnectionState.active) {
+//           User? user = snapshot.data; // Get the current user
+//           // Check if user is logged in
+//           if (user != null) {
+//
+//           }
+//         }
+//         // While checking the user state, show a loading indicator
+//         return Center(child: CircularProgressIndicator());
+//       },
+//     );
+//   }
+// }
+
+
 class AuthGate extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -58,11 +83,51 @@ class AuthGate extends StatelessWidget {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.active) {
           User? user = snapshot.data; // Get the current user
+
           // Check if user is logged in
           if (user != null) {
-            return DashboardPage(role: ''); // Redirect to dashboard
+            // Fetch the user role from your provider
+            return FutureBuilder<String?>(
+              future: Provider.of<UserProvider>(context, listen: false).fetchRole(),
+              builder: (context, roleSnapshot) {
+                if (roleSnapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator()); // Show loading indicator
+                } else if (roleSnapshot.hasError) {
+                  return Center(child: Text('Error: ${roleSnapshot.error}'));
+                } else {
+                  String? userRole = roleSnapshot.data;
+
+                  // Navigate based on user role
+                  if (userRole == 'MD') {
+                    // Navigate to MD Page
+                    WidgetsBinding.instance!.addPostFrameCallback((_) {
+                      Navigator.pushReplacementNamed(context, '/mdPage');
+                    });
+                  } else if (userRole == 'Manager') {
+                    // Navigate to Manager Page
+                    WidgetsBinding.instance!.addPostFrameCallback((_) {
+                      Navigator.pushReplacementNamed(context, '/managerPage');
+                    });
+                  } else if (userRole == 'Employee') {
+                    // Navigate to Employee Page
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      Navigator.pushReplacementNamed(context, '/employeePage');
+                    });
+                  } else {
+                    // If role is null, go to login page
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      Navigator.pushReplacementNamed(context, '/login');
+                    });
+                  }
+                }
+                return Container(); // Empty container while navigating
+              },
+            );
           } else {
-            return LoginPage(); // Redirect to login page
+            // User is not logged in, navigate to login page
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              Navigator.pushReplacementNamed(context, '/login');
+            });
           }
         }
         // While checking the user state, show a loading indicator

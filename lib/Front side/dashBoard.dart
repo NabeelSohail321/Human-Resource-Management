@@ -9,9 +9,8 @@ import 'drawerfile.dart';
 import 'goalassignment.dart'; // Assuming this contains your custom drawer
 
 class DashboardPage extends StatefulWidget {
-  final String role;
+  const DashboardPage({super.key});
 
-  const DashboardPage({Key? key, required this.role}) : super(key: key);
 
   @override
   State<DashboardPage> createState() => _DashboardPageState();
@@ -81,90 +80,90 @@ class _DashboardPageState extends State<DashboardPage>
           // Animated content that moves to the side
           SlideTransition(
             position: _contentSlideAnimation,
-            child: Row(
-              children: [
-                SizedBox(width: screenSize.width*0.02,),
-                InkWell(
-                  child: Card(
-                    elevation: 5,
-                    child: Container(
-                      width: 200,
-                      height: 200,
-                      child: const Center(child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text("TOTAL",style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold,color: Colors.blueGrey)),
-                          Text("Departs",style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold,color: Colors.blueGrey)),
-                        ],
-                      )),
-                    ),
-                  ),
-                  onTap: (){
-                    Navigator.push(context, MaterialPageRoute(builder: (context)=>DepartmentListPage()));
-                  },
-                ),
-                SizedBox(width: screenSize.width*0.02,),
-                InkWell(
-                  child: Card(
-                    elevation: 5,
-                    child: Container(
-                      width: 200,
-                      height: 200,
-                      child: const Center(child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text("TOTAL",style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold,color: Colors.blueGrey)),
-                          Text("Managers",style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold,color: Colors.blueGrey)),
-                        ],
-                      )),
-                    ),
-                  ),
-                  onTap: (){
-                    Navigator.push(context, MaterialPageRoute(builder: (context)=>const ManagersListPage()));
-                  },
-                ),
-                SizedBox(width: screenSize.width*0.02,),
-                InkWell(
-                  child: Card(
-                    elevation: 5,
-                    child: Container(
-                      width: 200,
-                      height: 200,
-                      child: const Center(child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text("TOTAL",style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold,color: Colors.blueGrey)),
-                          Text("Resticated",style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold,color: Colors.blueGrey)),
-                        ],
-                      )),
-                    ),
-                  ),
-                  onTap: (){
-                    Navigator.push(context, MaterialPageRoute(builder: (context)=>const ResticatedListPage()));
-                  },
-                ),
-                InkWell(
-                  child: Card(
-                    elevation: 5,
-                    child: Container(
-                      width: 200,
-                      height: 200,
-                      child: const Center(child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text("Goal",style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold,color: Colors.blueGrey)),
-                          Text("Assignment",style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold,color: Colors.blueGrey)),
-                        ],
-                      )),
-                    ),
-                  ),
-                  onTap: (){
-                    Navigator.push(context, MaterialPageRoute(builder: (context)=> GoalAssignment()));
-                  },
-                ),
-
-              ],
-            ),
+            // child: Row(
+            //   children: [
+            //     SizedBox(width: screenSize.width*0.02,),
+            //     InkWell(
+            //       child: Card(
+            //         elevation: 5,
+            //         child: Container(
+            //           width: 200,
+            //           height: 200,
+            //           child: const Center(child: Column(
+            //             mainAxisAlignment: MainAxisAlignment.center,
+            //             children: [
+            //               Text("TOTAL",style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold,color: Colors.blueGrey)),
+            //               Text("Departs",style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold,color: Colors.blueGrey)),
+            //             ],
+            //           )),
+            //         ),
+            //       ),
+            //       onTap: (){
+            //         Navigator.push(context, MaterialPageRoute(builder: (context)=>DepartmentListPage()));
+            //       },
+            //     ),
+            //     SizedBox(width: screenSize.width*0.02,),
+            //     InkWell(
+            //       child: Card(
+            //         elevation: 5,
+            //         child: Container(
+            //           width: 200,
+            //           height: 200,
+            //           child: const Center(child: Column(
+            //             mainAxisAlignment: MainAxisAlignment.center,
+            //             children: [
+            //               Text("TOTAL",style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold,color: Colors.blueGrey)),
+            //               Text("Managers",style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold,color: Colors.blueGrey)),
+            //             ],
+            //           )),
+            //         ),
+            //       ),
+            //       onTap: (){
+            //         Navigator.push(context, MaterialPageRoute(builder: (context)=>const ManagersListPage()));
+            //       },
+            //     ),
+            //     SizedBox(width: screenSize.width*0.02,),
+            //     InkWell(
+            //       child: Card(
+            //         elevation: 5,
+            //         child: Container(
+            //           width: 200,
+            //           height: 200,
+            //           child: const Center(child: Column(
+            //             mainAxisAlignment: MainAxisAlignment.center,
+            //             children: [
+            //               Text("TOTAL",style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold,color: Colors.blueGrey)),
+            //               Text("Resticated",style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold,color: Colors.blueGrey)),
+            //             ],
+            //           )),
+            //         ),
+            //       ),
+            //       onTap: (){
+            //         Navigator.push(context, MaterialPageRoute(builder: (context)=>const ResticatedListPage()));
+            //       },
+            //     ),
+            //     InkWell(
+            //       child: Card(
+            //         elevation: 5,
+            //         child: Container(
+            //           width: 200,
+            //           height: 200,
+            //           child: const Center(child: Column(
+            //             mainAxisAlignment: MainAxisAlignment.center,
+            //             children: [
+            //               Text("Goal",style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold,color: Colors.blueGrey)),
+            //               Text("Assignment",style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold,color: Colors.blueGrey)),
+            //             ],
+            //           )),
+            //         ),
+            //       ),
+            //       onTap: (){
+            //         Navigator.push(context, MaterialPageRoute(builder: (context)=> GoalAssignment()));
+            //       },
+            //     ),
+            //
+            //   ],
+            // ),
           ),
 
           // Animated Drawer
@@ -185,5 +184,55 @@ class _DashboardPageState extends State<DashboardPage>
   void dispose() {
     _animationController.dispose();
     super.dispose();
+  }
+}
+
+
+class DashboardItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onButtonPressed;
+
+  const DashboardItem({
+    Key? key,
+    required this.icon,
+    required this.label,
+    required this.onButtonPressed,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onButtonPressed,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.teal.shade100,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: Colors.teal,
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 50,
+              color: Colors.black87,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

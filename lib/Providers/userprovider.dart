@@ -362,6 +362,55 @@ class UserProvider extends ChangeNotifier {
     }
   }
 
+  Future<String?> fetchRole() async {
+    if (_user == null) {
+      throw Exception('User is not authenticated');
+    }
+
+    String uid = _user!.uid; // Get the user's UID
+
+    try {
+      // Fetch user data from the MD, Employee, and Manager nodes
+      final hrSnapshot = await _dbRef.child('MD').child(uid).once();
+      final employeeSnapshot = await _dbRef.child('Employee').child(uid).once();
+      final managerSnapshot = await _dbRef.child('Manager').child(uid).once();
+
+      // Reset user role before fetching
+      _userRole = null;
+
+      // Check if the user exists in the MD node
+      if (hrSnapshot.snapshot.exists) {
+        final hrData = hrSnapshot.snapshot.value as Map<dynamic, dynamic>?; // Cast to Map
+        if (hrData != null && hrData['email'] == _user!.email) {
+          _userRole = 'MD';
+        }
+      }
+
+      // Check if the user exists in the Employee node
+      if (employeeSnapshot.snapshot.exists) {
+        final employeeData = employeeSnapshot.snapshot.value as Map<dynamic, dynamic>?; // Cast to Map
+        if (employeeData != null && employeeData['email'] == _user!.email) {
+          _userRole = 'Employee';
+        }
+      }
+
+      // Check if the user exists in the Manager node
+      if (managerSnapshot.snapshot.exists) {
+        final managerData = managerSnapshot.snapshot.value as Map<dynamic, dynamic>?; // Cast to Map
+        if (managerData != null && managerData['email'] == _user!.email) {
+          _userRole = 'Manager';
+        }
+      }
+
+      // Notify listeners of the change in user role
+      notifyListeners();
+
+      // Return the user role
+      return _userRole; // Return the user's role if found
+    } catch (e) {
+      throw Exception('Failed to fetch user role: ${e.toString()}');
+    }
+  }
 
 
   Future<int> _getHighestEmployeeNumber() async {
@@ -420,14 +469,14 @@ class UserProvider extends ChangeNotifier {
     DatabaseEvent employeeEvent = await employeeRef.child(uid).once();
     if (employeeEvent.snapshot.exists) {
       // User is an Employee
-      return "Employee (Role 1)";
+      return "1"; //Employee
     }
 
     // Check if the user exists in the MD node
     DatabaseEvent mdEvent = await mdRef.child(uid).once();
     if (mdEvent.snapshot.exists) {
       // User is an MD
-      return "MD (Role 0)";
+      return "0"; //MD
     }
 
     // If you have a Manager node, check it here
@@ -435,7 +484,7 @@ class UserProvider extends ChangeNotifier {
     DatabaseEvent managerEvent = await managerRef.child(uid).once();
     if (managerEvent.snapshot.exists) {
       // User is a Manager
-      return "Manager"; // Adjust as necessary
+      return "2"; // Adjust as necessary Manager role
     }
 
     // User role not found
