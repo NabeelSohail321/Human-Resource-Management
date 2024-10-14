@@ -16,8 +16,8 @@ class _SuperAdminPanelState extends State<SuperAdminPanel> {
     // Delay the fetch operation until after the first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final userProvider = Provider.of<UserProvider>(context, listen: false);
-      userProvider.fetchUsers();
-      // userProvider.fetchDepartments(); // Fetch departments when the widget is initialized
+      // userProvider.fetchUsers();
+      userProvider.fetchDepartments(); // Fetch departments when the widget is initialized
     });
   }
 
@@ -85,9 +85,9 @@ class _SuperAdminPanelState extends State<SuperAdminPanel> {
                       DropdownButton<String>(
                         value: selectedDepartmentId, // Use selectedDepartmentId here
                         items: [
-                          const DropdownMenuItem(
+                           DropdownMenuItem(
                             value: 'no_department',
-                            child: Text('No Department Selected'),
+                            child: Text('${user['departmentName'] ?? 'No Department'}'),
                           ),
                           ...departmentMap.entries.map((entry) {
                             return DropdownMenuItem<String>(

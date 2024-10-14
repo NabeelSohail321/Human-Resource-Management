@@ -174,6 +174,7 @@ class UserProvider extends ChangeNotifier {
               'uid': map['uid'] ?? '',
               'name': map['name'] ?? 'Unknown',
               'email': map['email'] ?? 'No Email',
+              'departmentName': map['departmentName'] ?? 'Unknown',
               'role': '0', // Role 0 for MD
               'user status': map['user status'] ?? 'No Status', // Ensure you add this line
 
