@@ -1,36 +1,79 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:human_capital_management/Models/managermodel.dart';
+import 'package:human_capital_management/Providers/managerprovider.dart';
+import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:intl/intl.dart';
+import '../Providers/usermodel.dart';
+import '../Providers/userprovider.dart';
+import 'drawerfile.dart';
 
 class HRDashboard extends StatefulWidget {
   @override
   _HRDashboardState createState() => _HRDashboardState();
 }
 
-class _HRDashboardState extends State<HRDashboard> {
+class _HRDashboardState extends State<HRDashboard> with SingleTickerProviderStateMixin{
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  late AnimationController _animationController;
+  late Animation<Offset> _slideAnimation;
+  late Animation<Offset> _contentSlideAnimation; // For the content slide
+  bool isDrawerOpen = false;
+  User? user; // Store the user information
   DateTimeRange selectedDateRange = DateTimeRange(
     start: DateTime.now().subtract(Duration(days: 30)),
     end: DateTime.now(),
   );
 
   String selectedDepartment = "All";
-  List<String> departments = ["All", "Finance", "IT", "Sales", "HR", "Marketing"];
 
   // ScrollController for GridView
   final ScrollController _scrollController = ScrollController();
   bool _isAtBottom = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _scrollController.addListener(_scrollListener);
-  }
 
   @override
   void dispose() {
     _scrollController.dispose();
     super.dispose();
   }
+
+
+  @override
+  void initState() {
+    super.initState();
+
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+
+    _slideAnimation = Tween<Offset>(begin: const Offset(-1.0, 0.0), end: Offset.zero)
+        .animate(CurvedAnimation(parent: _animationController, curve: Curves.easeInOut));
+
+    _contentSlideAnimation = Tween<Offset>(begin: Offset.zero, end: const Offset(0.18, 0.0))
+        .animate(CurvedAnimation(parent: _animationController, curve: Curves.easeInOut));
+
+    _scrollController.addListener(_scrollListener);
+
+    // Ensure we fetch the current manager's details after the first frame is rendered
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final managerProvider = Provider.of<ManagersProvider>(context, listen: false);
+        managerProvider.fetchCurrentManagerByUid(user.uid); // Fetch the current manager using UID
+      }
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      user = FirebaseAuth.instance.currentUser; // Get the current user
+      if (user != null) {
+        Provider.of<UserModel>(context, listen: false).fetchUserDetails(user!.uid);
+      }
+    });
+  }
+
 
   void _scrollListener() {
     if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent) {
@@ -62,192 +105,227 @@ class _HRDashboardState extends State<HRDashboard> {
     }
   }
 
+  void toggleDrawer() {
+    if (isDrawerOpen) {
+      _animationController.reverse();
+    } else {
+      _animationController.forward();
+    }
+    setState(() {
+      isDrawerOpen = !isDrawerOpen;
+    });
+  }
+
+
+
   @override
   Widget build(BuildContext context) {
+    final managerProvider = Provider.of<ManagersProvider>(context);
+    final currentManager = managerProvider.currentManager;
+    String selectedDepartment = currentManager?.departmentName ?? "All";
+
+    final screenSize = MediaQuery.of(context).size;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('HR Attendance Dashboard'),
+        leading: IconButton(
+          icon: const Icon(Icons.menu),
+          onPressed: toggleDrawer,
+        ),
+        title: const Text("Manager DashBoard",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 30),),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            bool isMobile = constraints.maxWidth < 600; // Threshold for mobile layout
-            return Column(
-              children: [
-                // Date Picker and Department Filter Row
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: InkWell(
-                        onTap: () async {
-                          DateTimeRange? picked = await showDateRangePicker(
-                            context: context,
-                            firstDate: DateTime(2020),
-                            lastDate: DateTime.now(),
-                            initialDateRange: selectedDateRange,
-                          );
-                          if (picked != null) {
-                            setState(() {
-                              selectedDateRange = picked;
-                            });
-                          }
-                        },
-                        child: Container(
-                          padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey),
-                            borderRadius: BorderRadius.circular(8.0),
-                          ),
-                          child: Row(
+      body: Stack(
+        children: [
+          SlideTransition(
+              position: _contentSlideAnimation,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    bool isMobile = constraints.maxWidth < 600; // Threshold for mobile layout
+                    return Column(
+                      children: [
+                        // Date Picker and Department Filter Row
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: InkWell(
+                                onTap: () async {
+                                  DateTimeRange? picked = await showDateRangePicker(
+                                    context: context,
+                                    firstDate: DateTime(2020),
+                                    lastDate: DateTime.now(),
+                                    initialDateRange: selectedDateRange,
+                                  );
+                                  if (picked != null) {
+                                    setState(() {
+                                      selectedDateRange = picked;
+                                    });
+                                  }
+                                },
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: Colors.grey),
+                                    borderRadius: BorderRadius.circular(8.0),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.calendar_today),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        '${DateFormat('MM/dd/yyyy').format(selectedDateRange.start)} - ${DateFormat('MM/dd/yyyy').format(selectedDateRange.end)}',
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 16),
+                            Expanded(
+                              child: DropdownButtonFormField<String>(
+                                value: selectedDepartment,
+                                onChanged: (newValue) {
+                                  setState(() {
+                                    selectedDepartment = newValue!;
+                                  });
+                                },
+                                items: [
+                                  DropdownMenuItem(value: currentManager?.departmentName, child: Text(currentManager?.departmentName ?? "All")),
+                                ],
+                                decoration: InputDecoration(
+                                  border: OutlineInputBorder(),
+                                  labelText: "Department",
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 16),
+
+                        // Metrics Grid - Responsive based on screen size
+                        Expanded(
+                          child: Stack(
                             children: [
-                              Icon(Icons.calendar_today),
-                              SizedBox(width: 8),
-                              Text(
-                                '${DateFormat('MM/dd/yyyy').format(selectedDateRange.start)} - ${DateFormat('MM/dd/yyyy').format(selectedDateRange.end)}',
+                              GridView.count(
+                                childAspectRatio: 2,
+                                controller: _scrollController, // Attach controller to GridView
+                                crossAxisCount: isMobile ? 2 : 4, // Adjust columns based on screen size
+                                crossAxisSpacing: 16,
+                                mainAxisSpacing: 16,
+                                children: [
+                                  buildMetricTile("Employee Days Absent", "296"),
+                                  buildMetricTile("Total Employees", "28"),
+                                  buildMetricTile("Pre-approved Absences", "188"),
+                                  buildMetricTile("Overtime Hours", "156"),
+                                  buildMetricTile("Unscheduled Days Leave", "108"),
+                                  buildMetricTile("Employee Days Present", "1248"),
+                                  buildMetricTile("Sick Leave vs. Casual Leave", "78 / 76"),
+                                  buildMetricTile("Employees on Probation", "8"),
+                                ],
+                              ),
+                              // Floating Action Button
+                              Positioned(
+                                bottom: 16,
+                                right: MediaQuery.of(context).size.width*0.478,
+                                child: Align(
+                                  alignment: Alignment.center,
+                                  child: FloatingActionButton(
+                                    mouseCursor: MaterialStateMouseCursor.clickable,
+                                    isExtended: true,
+                                    focusElevation: 200,
+                                    tooltip: _isAtBottom ?'scroll up': 'scroll down',
+                                    onPressed: _scrollToPosition,
+                                    child: Icon(_isAtBottom ? Icons.arrow_upward : Icons.arrow_downward,size: 30,),
+                                  ),
+                                ),
                               ),
                             ],
                           ),
                         ),
-                      ),
-                    ),
-                    SizedBox(width: 16),
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        value: selectedDepartment,
-                        onChanged: (newValue) {
-                          setState(() {
-                            selectedDepartment = newValue!;
-                          });
-                        },
-                        items: departments.map((String department) {
-                          return DropdownMenuItem<String>(
-                            value: department,
-                            child: Text(department),
-                          );
-                        }).toList(),
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(),
-                          labelText: "Departments",
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 16),
 
-                // Metrics Grid - Responsive based on screen size
-                Expanded(
-                  child: Stack(
-                    children: [
-                      GridView.count(
-                        childAspectRatio: 2,
-                        controller: _scrollController, // Attach controller to GridView
-                        crossAxisCount: isMobile ? 2 : 4, // Adjust columns based on screen size
-                        crossAxisSpacing: 16,
-                        mainAxisSpacing: 16,
-                        children: [
-                          buildMetricTile("Employee Days Absent", "296"),
-                          buildMetricTile("Total Employees", "28"),
-                          buildMetricTile("Pre-approved Absences", "188"),
-                          buildMetricTile("Overtime Hours", "156"),
-                          buildMetricTile("Unscheduled Days Leave", "108"),
-                          buildMetricTile("Employee Days Present", "1248"),
-                          buildMetricTile("Sick Leave vs. Casual Leave", "78 / 76"),
-                          buildMetricTile("Employees on Probation", "8"),
-                        ],
-                      ),
-                      // Floating Action Button
-                      Positioned(
-                        bottom: 16,
-                        right: MediaQuery.of(context).size.width*0.478,
-                        child: Align(
-                          alignment: Alignment.center,
-                          child: FloatingActionButton(
-                            mouseCursor: MaterialStateMouseCursor.clickable,
-                            isExtended: true,
-                            focusElevation: 200,
-                            tooltip: _isAtBottom ?'scroll up': 'scroll down',
-                            onPressed: _scrollToPosition,
-                            child: Icon(_isAtBottom ? Icons.arrow_upward : Icons.arrow_downward,size: 30,),
+                        // Charts Section - Responsive layout based on screen size
+                        Expanded(
+                          child: isMobile
+                              ? Column( // For mobile, display charts vertically
+                            children: [
+                              Expanded(
+                                child: SfCircularChart(
+                                  title: ChartTitle(text: 'Employee Work Location Breakdown'),
+                                  legend: Legend(isVisible: true, position: LegendPosition.bottom),
+                                  series: <CircularSeries>[
+                                    PieSeries<WorkLocationData, String>(
+                                      dataSource: getWorkLocationData(),
+                                      xValueMapper: (WorkLocationData data, _) => data.location,
+                                      yValueMapper: (WorkLocationData data, _) => data.percentage,
+                                      dataLabelSettings: DataLabelSettings(isVisible: true),
+                                    )
+                                  ],
+                                ),
+                              ),
+                              Expanded(
+                                child: SfCartesianChart(
+                                  title: ChartTitle(text: 'Attendance by Department'),
+                                  primaryXAxis: CategoryAxis(),
+                                  series: <ChartSeries>[
+                                    BarSeries<DepartmentAttendanceData, String>(
+                                      dataSource: getDepartmentAttendanceData(),
+                                      xValueMapper: (DepartmentAttendanceData data, _) => data.department,
+                                      yValueMapper: (DepartmentAttendanceData data, _) => data.attendanceRate,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          )
+                              : Row( // For larger screens, display charts side by side
+                            children: [
+                              Expanded(
+                                child: SfCircularChart(
+                                  title: ChartTitle(text: 'Employee Work Location Breakdown'),
+                                  legend: Legend(isVisible: true, position: LegendPosition.right),
+                                  series: <CircularSeries>[
+                                    PieSeries<WorkLocationData, String>(
+                                      dataSource: getWorkLocationData(),
+                                      xValueMapper: (WorkLocationData data, _) => data.location,
+                                      yValueMapper: (WorkLocationData data, _) => data.percentage,
+                                      dataLabelSettings: DataLabelSettings(isVisible: true),
+                                    )
+                                  ],
+                                ),
+                              ),
+                              Expanded(
+                                child: SfCartesianChart(
+                                  title: ChartTitle(text: 'Attendance by Department'),
+                                  primaryXAxis: CategoryAxis(),
+                                  series: <ChartSeries>[
+                                    BarSeries<DepartmentAttendanceData, String>(
+                                      dataSource: getDepartmentAttendanceData(),
+                                      xValueMapper: (DepartmentAttendanceData data, _) => data.department,
+                                      yValueMapper: (DepartmentAttendanceData data, _) => data.attendanceRate,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    );
+                  },
                 ),
+              ),
+          ),
+          SlideTransition(
+            position: _slideAnimation,
+            child: Container(
+              width: screenSize.width * 0.18, // Adjust width of the drawer (80% of the screen)
+              child:  Drawerfrontside(), // Your custom drawer widget
+            ),
+          ),
 
-                // Charts Section - Responsive layout based on screen size
-                Expanded(
-                  child: isMobile
-                      ? Column( // For mobile, display charts vertically
-                    children: [
-                      Expanded(
-                        child: SfCircularChart(
-                          title: ChartTitle(text: 'Employee Work Location Breakdown'),
-                          legend: Legend(isVisible: true, position: LegendPosition.bottom),
-                          series: <CircularSeries>[
-                            PieSeries<WorkLocationData, String>(
-                              dataSource: getWorkLocationData(),
-                              xValueMapper: (WorkLocationData data, _) => data.location,
-                              yValueMapper: (WorkLocationData data, _) => data.percentage,
-                              dataLabelSettings: DataLabelSettings(isVisible: true),
-                            )
-                          ],
-                        ),
-                      ),
-                      Expanded(
-                        child: SfCartesianChart(
-                          title: ChartTitle(text: 'Attendance by Department'),
-                          primaryXAxis: CategoryAxis(),
-                          series: <ChartSeries>[
-                            BarSeries<DepartmentAttendanceData, String>(
-                              dataSource: getDepartmentAttendanceData(),
-                              xValueMapper: (DepartmentAttendanceData data, _) => data.department,
-                              yValueMapper: (DepartmentAttendanceData data, _) => data.attendanceRate,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  )
-                      : Row( // For larger screens, display charts side by side
-                    children: [
-                      Expanded(
-                        child: SfCircularChart(
-                          title: ChartTitle(text: 'Employee Work Location Breakdown'),
-                          legend: Legend(isVisible: true, position: LegendPosition.right),
-                          series: <CircularSeries>[
-                            PieSeries<WorkLocationData, String>(
-                              dataSource: getWorkLocationData(),
-                              xValueMapper: (WorkLocationData data, _) => data.location,
-                              yValueMapper: (WorkLocationData data, _) => data.percentage,
-                              dataLabelSettings: DataLabelSettings(isVisible: true),
-                            )
-                          ],
-                        ),
-                      ),
-                      Expanded(
-                        child: SfCartesianChart(
-                          title: ChartTitle(text: 'Attendance by Department'),
-                          primaryXAxis: CategoryAxis(),
-                          series: <ChartSeries>[
-                            BarSeries<DepartmentAttendanceData, String>(
-                              dataSource: getDepartmentAttendanceData(),
-                              xValueMapper: (DepartmentAttendanceData data, _) => data.department,
-                              yValueMapper: (DepartmentAttendanceData data, _) => data.attendanceRate,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
+        ],
       ),
     );
   }

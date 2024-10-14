@@ -7,7 +7,6 @@ import 'package:human_capital_management/Front%20side/superadminpanel.dart';
 import 'Front side/dashBoard.dart';
 import 'Front side/goalassignment.dart';
 import 'Front side/managerDashboard.dart';
-import 'Front side/mdDashboard.dart';
 import 'Front side/total_departs.dart';
 import 'Front side/totalgoalspage.dart';
 import 'Front side/totalmanagerslistpage.dart';
@@ -44,20 +43,19 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (context) => ManagersProvider()),
         ChangeNotifierProvider(create: (_) => RestrictedUsersProvider()),
         ChangeNotifierProvider(create: (_) => GoalsProvider()),
-
       ],
       child: MaterialApp(
         routes: {
-          '/frontPage': (context) => DashboardPage(),
+          '/frontPage': (context) => const DashboardPage(),
           '/managerpage': (context) => HRDashboard(),
-          '/login': (context) => LoginPage(),
+          '/login': (context) => const LoginPage(),
           '/totaldepartments': (context) => DepartmentListPage(),
-          '/totalmanagers': (context) => ManagersListPage(),
-          '/totalresticated': (context) => ResticatedListPage(),
+          '/totalmanagers': (context) => const ManagersListPage(),
+          '/totalresticated': (context) => const ResticatedListPage(),
           '/superadminpanel': (context) => SuperAdminPanel(),
           '/adddepartments': (context) => AddDepartmentPage(),
-          '/goalassignments': (context) => GoalAssignment(),
-          '/totalgoalslist': (context) => TotalGoalsPage(),
+          '/goalassignments': (context) => const GoalAssignment(),
+          '/totalgoalslist': (context) => const TotalGoalsPage(),
 
 
         },
@@ -106,7 +104,7 @@ class AuthGate extends StatelessWidget {
               future: Provider.of<UserProvider>(context, listen: false).fetchRole(),
               builder: (context, roleSnapshot) {
                 if (roleSnapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator()); // Show loading indicator
+                  return const Center(child: CircularProgressIndicator()); // Show loading indicator
                 } else if (roleSnapshot.hasError) {
                   return Center(child: Text('Error: ${roleSnapshot.error}'));
                 } else {
@@ -146,7 +144,7 @@ class AuthGate extends StatelessWidget {
           }
         }
         // While checking the user state, show a loading indicator
-        return Center(child: CircularProgressIndicator());
+        return const Center(child: CircularProgressIndicator());
       },
     );
   }

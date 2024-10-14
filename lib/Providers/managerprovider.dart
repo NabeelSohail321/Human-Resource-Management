@@ -4,6 +4,9 @@ import '../Models/managermodel.dart';
 
 class ManagersProvider with ChangeNotifier {
   List<Manager> _managers = [];
+  Manager? _currentManager;
+
+  Manager? get currentManager => _currentManager; // Add this getter to access the current manager
 
   List<Manager> get managers => _managers;
 
@@ -44,6 +47,24 @@ class ManagersProvider with ChangeNotifier {
       print('Error fetching managers: $e');
     }
   }
+  void fetchCurrentManagerByUid(String uid) {
+    // Ensure the manager list is loaded before trying to find the current manager
+    _currentManager = _managers.firstWhere(
+          (manager) => manager.uid == uid,
+      orElse: () => Manager(
+        uid: '',
+        name: '',
+        email: '',
+        phone: '',
+        departmentName: '',
+        managerNumber: '',
+        role: '',
+        status: '',
+      ),
+    );
+    notifyListeners();
+  }
+
 
   void restrictManager(Manager manager) async {
     try {

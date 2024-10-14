@@ -1,12 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:human_capital_management/Front%20side/total_departs.dart';
-import 'package:human_capital_management/Front%20side/totalmanagerslistpage.dart';
-import 'package:human_capital_management/Front%20side/totalresticationpage.dart';
 import 'package:provider/provider.dart';
 import '../Providers/usermodel.dart';
 import 'drawerfile.dart';
-import 'goalassignment.dart'; // Assuming this contains your custom drawer
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
