@@ -22,7 +22,6 @@ class _GoalAssignmentState extends State<GoalAssignment> {
     final userProvider = Provider.of<ManagersProvider>(context, listen: false);
     userProvider.fetchManagers();
     userProvider.fetchEmployees();
-
   }
 
   @override
@@ -72,10 +71,10 @@ class _GoalAssignmentState extends State<GoalAssignment> {
             DropdownButtonFormField<String>(
               value: selectedEmployee,
               hint: Text('Select Employee'),
-              items: managersList.map((manager) {
+              items: EmployeeList.map((employee) {
                 return DropdownMenuItem<String>(
-                  value: manager.uid, // Assuming each manager has a unique ID
-                  child: Text(manager.name), // Display manager's name in the dropdown
+                  value: employee.uid, // Assuming each manager has a unique ID
+                  child: Text(employee.name), // Display manager's name in the dropdown
                 );
               }).toList(),
               onChanged: (newValue) {
