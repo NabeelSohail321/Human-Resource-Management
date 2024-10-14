@@ -11,13 +11,11 @@ import 'goalassignment.dart'; // Assuming this contains your custom drawer
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
 
-
   @override
   State<DashboardPage> createState() => _DashboardPageState();
 }
 
-class _DashboardPageState extends State<DashboardPage>
-    with SingleTickerProviderStateMixin {
+class _DashboardPageState extends State<DashboardPage> with SingleTickerProviderStateMixin {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   late AnimationController _animationController;
   late Animation<Offset> _slideAnimation;
@@ -49,7 +47,75 @@ class _DashboardPageState extends State<DashboardPage>
     });
   }
 
+  /// Build the responsive GridView based on screen width.
+  Widget _buildGridView(double screenWidth) {
+    int crossAxisCount;
 
+    // Determine the number of columns based on screen width using MediaQuery
+    if (screenWidth < 600) {
+      crossAxisCount = 2; // Mobile screens
+    } else if (screenWidth < 1200) {
+      crossAxisCount = 3; // Tablet screens
+    } else {
+      crossAxisCount = 5; // Large screens (like laptops and desktops)
+    }
+
+    return GridView.count(
+      crossAxisCount: crossAxisCount,
+      crossAxisSpacing: 20.0,
+      mainAxisSpacing: 20.0,
+      padding: const EdgeInsets.all(16.0), // Add padding if necessary
+      children: [
+        DashboardItem(
+          icon: Icons.work_outline,
+          label: 'Add Departments',
+          onButtonPressed: () {
+            Navigator.pushNamed(context, '/adddepartments');
+          },
+        ),
+        DashboardItem(
+          icon: Icons.work_outline,
+          label: 'Departments',
+          onButtonPressed: () {
+            Navigator.pushNamed(context, '/totaldepartments');
+          },
+        ),
+        // Add other DashboardItems as needed
+        DashboardItem(
+          icon: Icons.people_alt_outlined,
+          label: 'Managers',
+          onButtonPressed: () {
+            Navigator.pushNamed(context, '/totalmanagers');
+            // Navigator.push(context, MaterialPageRoute(builder: (context)=>const ManagersListPage()));
+          },
+        ),
+        DashboardItem(
+          icon: Icons.rule,
+          label: 'Terminations',
+          onButtonPressed: () {
+            Navigator.pushNamed(context, '/totalresticated');
+          },
+        ),
+        DashboardItem(
+          icon: Icons.rule,
+          label: 'Goal Assignments',
+          onButtonPressed: () {
+            Navigator.pushNamed(context, '/goalassignments');
+          },
+        ),DashboardItem(
+          icon: Icons.rule,
+          label: 'Total Goals',
+          onButtonPressed: () {
+            Navigator.pushNamed(context, '/totalgoalslist');
+          },
+        ),
+
+        // Add more items as needed
+      ],
+    );
+  }
+
+  /// Handle drawer toggle animation.
   void toggleDrawer() {
     if (isDrawerOpen) {
       _animationController.reverse();
@@ -64,7 +130,7 @@ class _DashboardPageState extends State<DashboardPage>
   @override
   Widget build(BuildContext context) {
     final userModel = Provider.of<UserModel>(context); // Listen to user model for updates
-    final screenSize = MediaQuery.of(context).size; // Get screen size
+    final screenSize = MediaQuery.of(context).size; // Get screen size dynamically
 
     return Scaffold(
       key: _scaffoldKey,
@@ -73,108 +139,23 @@ class _DashboardPageState extends State<DashboardPage>
           icon: const Icon(Icons.menu),
           onPressed: toggleDrawer,
         ),
-        title: const Text("Dash Board"),
+        title: const Text("MD Dash Board",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 30),),
       ),
       body: Stack(
         children: [
-          // Animated content that moves to the side
+          // Animated content that moves to the side when the drawer is open
           SlideTransition(
             position: _contentSlideAnimation,
-            // child: Row(
-            //   children: [
-            //     SizedBox(width: screenSize.width*0.02,),
-            //     InkWell(
-            //       child: Card(
-            //         elevation: 5,
-            //         child: Container(
-            //           width: 200,
-            //           height: 200,
-            //           child: const Center(child: Column(
-            //             mainAxisAlignment: MainAxisAlignment.center,
-            //             children: [
-            //               Text("TOTAL",style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold,color: Colors.blueGrey)),
-            //               Text("Departs",style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold,color: Colors.blueGrey)),
-            //             ],
-            //           )),
-            //         ),
-            //       ),
-            //       onTap: (){
-            //         Navigator.push(context, MaterialPageRoute(builder: (context)=>DepartmentListPage()));
-            //       },
-            //     ),
-            //     SizedBox(width: screenSize.width*0.02,),
-            //     InkWell(
-            //       child: Card(
-            //         elevation: 5,
-            //         child: Container(
-            //           width: 200,
-            //           height: 200,
-            //           child: const Center(child: Column(
-            //             mainAxisAlignment: MainAxisAlignment.center,
-            //             children: [
-            //               Text("TOTAL",style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold,color: Colors.blueGrey)),
-            //               Text("Managers",style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold,color: Colors.blueGrey)),
-            //             ],
-            //           )),
-            //         ),
-            //       ),
-            //       onTap: (){
-            //         Navigator.push(context, MaterialPageRoute(builder: (context)=>const ManagersListPage()));
-            //       },
-            //     ),
-            //     SizedBox(width: screenSize.width*0.02,),
-            //     InkWell(
-            //       child: Card(
-            //         elevation: 5,
-            //         child: Container(
-            //           width: 200,
-            //           height: 200,
-            //           child: const Center(child: Column(
-            //             mainAxisAlignment: MainAxisAlignment.center,
-            //             children: [
-            //               Text("TOTAL",style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold,color: Colors.blueGrey)),
-            //               Text("Resticated",style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold,color: Colors.blueGrey)),
-            //             ],
-            //           )),
-            //         ),
-            //       ),
-            //       onTap: (){
-            //         Navigator.push(context, MaterialPageRoute(builder: (context)=>const ResticatedListPage()));
-            //       },
-            //     ),
-            //     InkWell(
-            //       child: Card(
-            //         elevation: 5,
-            //         child: Container(
-            //           width: 200,
-            //           height: 200,
-            //           child: const Center(child: Column(
-            //             mainAxisAlignment: MainAxisAlignment.center,
-            //             children: [
-            //               Text("Goal",style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold,color: Colors.blueGrey)),
-            //               Text("Assignment",style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold,color: Colors.blueGrey)),
-            //             ],
-            //           )),
-            //         ),
-            //       ),
-            //       onTap: (){
-            //         Navigator.push(context, MaterialPageRoute(builder: (context)=> GoalAssignment()));
-            //       },
-            //     ),
-            //
-            //   ],
-            // ),
+            child: _buildGridView(screenSize.width), // Pass screen width for responsive grid
           ),
-
-          // Animated Drawer
+          // Drawer widget that slides in/out
           SlideTransition(
             position: _slideAnimation,
-            child: const Drawerfrontside(), // Replace with your custom drawer
+            child: Container(
+              width: screenSize.width * 0.18, // Adjust width of the drawer (80% of the screen)
+              child:  Drawerfrontside(), // Your custom drawer widget
+            ),
           ),
-
-          // Placeholder or content while loading user details
-          // if (userModel.isLoading) // Assuming you have a loading state in UserModel
-          //   Center(child: CircularProgressIndicator()),
         ],
       ),
     );
@@ -186,7 +167,6 @@ class _DashboardPageState extends State<DashboardPage>
     super.dispose();
   }
 }
-
 
 class DashboardItem extends StatelessWidget {
   final IconData icon;

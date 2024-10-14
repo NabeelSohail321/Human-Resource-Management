@@ -27,7 +27,7 @@ class DepartmentListPage extends StatelessWidget {
                   itemCount: departments.length,
                   itemBuilder: (context, index) {
                     final department = departments[index];
-                    final departmentName = department['departName'] ?? 'Unknown'; // Make sure to match the correct key
+                    final departmentName = department['departName'] ?? 'Unknown'; // Ensure correct key
                     final departmentId = department['departId'] ?? 'Unknown';
 
                     return ListTile(
@@ -51,8 +51,17 @@ class DepartmentListPage extends StatelessWidget {
                                 ),
                                 TextButton(
                                   onPressed: () async {
-                                    // Call the delete method
-                                    await userProvider.deleteDepartment(departmentId);
+                                    // Call the delete method and handle the result
+                                    try {
+                                      await userProvider.deleteDepartment(departmentId);
+                                      // Optionally, you can re-fetch the departments
+                                      await userProvider.fetchtotalDepartments(); // Refresh the list
+                                    } catch (e) {
+                                      // Handle any errors that occur during deletion
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text('Failed to delete: $e')),
+                                      );
+                                    }
                                     Navigator.of(context).pop(); // Close the dialog
                                   },
                                   child: const Text('Delete'),
@@ -69,6 +78,12 @@ class DepartmentListPage extends StatelessWidget {
             );
           }
         },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: (){
+          Navigator.pushNamed(context, '/adddepartments');
+        },
+        child: Icon(Icons.add,color: Colors.teal,),
       ),
     );
   }

@@ -2,9 +2,16 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:human_capital_management/Front%20side/Loginpage.dart';
+import 'package:human_capital_management/Front%20side/adddepartments.dart';
+import 'package:human_capital_management/Front%20side/superadminpanel.dart';
 import 'Front side/dashBoard.dart';
+import 'Front side/goalassignment.dart';
 import 'Front side/managerDashboard.dart';
 import 'Front side/mdDashboard.dart';
+import 'Front side/total_departs.dart';
+import 'Front side/totalgoalspage.dart';
+import 'Front side/totalmanagerslistpage.dart';
+import 'Front side/totalresticationpage.dart';
 import 'Providers/goalprovider.dart';
 import 'Providers/managerprovider.dart';
 import 'Providers/resticatedprovider.dart';
@@ -35,16 +42,24 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => UserProvider()..fetchUsers()),
         ChangeNotifierProvider(create: (context) => UserModel()),
         ChangeNotifierProvider(create: (context) => ManagersProvider()),
-        ChangeNotifierProvider(create: (_) => resticatedUsersProvider()),
+        ChangeNotifierProvider(create: (_) => RestrictedUsersProvider()),
         ChangeNotifierProvider(create: (_) => GoalsProvider()),
 
       ],
       child: MaterialApp(
         routes: {
           '/frontPage': (context) => DashboardPage(),
-          '/mdpage': (context) => DashboardScreen(),
           '/managerpage': (context) => HRDashboard(),
           '/login': (context) => LoginPage(),
+          '/totaldepartments': (context) => DepartmentListPage(),
+          '/totalmanagers': (context) => ManagersListPage(),
+          '/totalresticated': (context) => ResticatedListPage(),
+          '/superadminpanel': (context) => SuperAdminPanel(),
+          '/adddepartments': (context) => AddDepartmentPage(),
+          '/goalassignments': (context) => GoalAssignment(),
+          '/totalgoalslist': (context) => TotalGoalsPage(),
+
+
         },
         title: 'HCM-Human Capital Management',
         debugShowCheckedModeBanner: false,

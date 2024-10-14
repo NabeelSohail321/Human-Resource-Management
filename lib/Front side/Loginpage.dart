@@ -361,7 +361,7 @@ class _LoginPageState extends State<LoginPage> {
       // Use a switch-case or if-else for clearer role handling
       switch (role) {
         case '0':
-          Navigator.pushReplacementNamed(context, '/mdpage');
+          Navigator.pushReplacementNamed(context, '/frontPage');
           break;
         case '1':
           Navigator.pushReplacement(

@@ -7,7 +7,6 @@ class CustomTextStyles {
       color: Colors.black
   );
 }
-
 class CustomAppBar {
   static AppBar customAppBar(String title) {
     return AppBar(

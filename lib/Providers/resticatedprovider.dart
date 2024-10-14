@@ -1,21 +1,31 @@
-import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/cupertino.dart';
+
 import '../Models/managermodel.dart';
 
-class resticatedUsersProvider with ChangeNotifier {
-  List<Manager> _resticatedUsers = [];
+class RestrictedUsersProvider with ChangeNotifier {
+  List<Manager> _restrictedUsers = [];
+  String? _errorMessage;
+  bool _isLoading = false;
 
-  List<Manager> get resticatedUsers => _resticatedUsers;
+  List<Manager> get restrictedUsers => _restrictedUsers;
+  String? get errorMessage => _errorMessage;
+  bool get isLoading => _isLoading; // Loading state property
 
   final DatabaseReference _databaseReference =
-  FirebaseDatabase.instance.ref().child('Restricted'); // Reference to the resticateed node
+  FirebaseDatabase.instance.ref().child('Restricted'); // Reference to the restricted node
 
-  void fetchresticatedUsers() {
+  void fetchRestrictedUsers() {
+    _isLoading = true; // Set loading to true
+    notifyListeners();
+
     _databaseReference.onValue.listen((event) {
-      final resticatedData = event.snapshot.value as Map<dynamic, dynamic>?;
+      _isLoading = false; // Reset loading when the data is fetched
+      _errorMessage = null; // Reset error message
+      final restrictedData = event.snapshot.value as Map<dynamic, dynamic>?;
 
-      if (resticatedData != null) {
-        _resticatedUsers = resticatedData.entries.map((entry) {
+      if (restrictedData != null) {
+        _restrictedUsers = restrictedData.entries.map((entry) {
           final userData = entry.value as Map<dynamic, dynamic>;
           return Manager(
             uid: entry.key,
@@ -29,9 +39,13 @@ class resticatedUsersProvider with ChangeNotifier {
           );
         }).toList();
       } else {
-        _resticatedUsers = [];
+        _restrictedUsers = [];
       }
 
+      notifyListeners();
+    }, onError: (error) {
+      _isLoading = false; // Reset loading state on error
+      _errorMessage = 'Failed to fetch restricted users: ${error.toString()}';
       notifyListeners();
     });
   }

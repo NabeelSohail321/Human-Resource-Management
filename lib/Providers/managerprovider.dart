@@ -10,29 +10,36 @@ class ManagersProvider with ChangeNotifier {
   final DatabaseReference _databaseReference =
   FirebaseDatabase.instance.ref().child('Manager'); // Reference to the Manager node
 
+  ManagersProvider() {
+    fetchManagers(); // Fetch managers when the provider is created
+  }
+
   void fetchManagers() async {
     try {
-      _databaseReference.onValue.listen((event) {
-        final managersData = event.snapshot.value as Map<dynamic, dynamic>?;
+      // Use once() to get data just once
+      final snapshot = await _databaseReference.once();
 
-        if (managersData != null) {
-          _managers = managersData.entries.map((entry) {
-            final managerData = entry.value as Map<dynamic, dynamic>;
-            return Manager(
-              uid: entry.key,
-              name: managerData['name'] ?? '',
-              email: managerData['email'] ?? '',
-              phone: managerData['phone'] ?? '',
-              departmentName: managerData['departmentName'] ?? '',
-              managerNumber: managerData['managerNumber'] ?? '',
-              role: managerData['role'] ?? '',
-              status: managerData['user status'] ?? '',
-            );
-          }).toList();
-        }
+      if (snapshot.snapshot.exists) { // Accessing exists through the snapshot
+        final managersData = snapshot.snapshot.value as Map<dynamic, dynamic>;
 
-        notifyListeners();
-      });
+        _managers = managersData.entries.map((entry) {
+          final managerData = entry.value as Map<dynamic, dynamic>;
+          return Manager(
+            uid: entry.key,
+            name: managerData['name'] ?? '',
+            email: managerData['email'] ?? '',
+            phone: managerData['phone'] ?? '',
+            departmentName: managerData['departmentName'] ?? '',
+            managerNumber: managerData['managerNumber'] ?? '',
+            role: managerData['role'] ?? '',
+            status: managerData['user status'] ?? '',
+          );
+        }).toList();
+      } else {
+        _managers = []; // Ensure the list is empty if no data is available
+      }
+
+      notifyListeners(); // Notify listeners after processing the data
     } catch (e) {
       print('Error fetching managers: $e');
     }
@@ -49,7 +56,7 @@ class ManagersProvider with ChangeNotifier {
           .child('Restricted')
           .child(manager.uid)
           .set({
-        'uid':manager.uid,
+        'uid': manager.uid,
         'name': manager.name,
         'email': manager.email,
         'phone': manager.phone,
@@ -60,11 +67,9 @@ class ManagersProvider with ChangeNotifier {
       });
 
       _managers.remove(manager);
-      notifyListeners();
+      notifyListeners(); // Notify listeners after updating the managers list
     } catch (e) {
       print('Error restricting manager: $e');
     }
   }
-
-
 }

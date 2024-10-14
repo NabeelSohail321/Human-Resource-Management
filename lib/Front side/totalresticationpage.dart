@@ -14,17 +14,30 @@ class _ResticatedListPageState extends State<ResticatedListPage> {
   @override
   void initState() {
     super.initState();
-    // Fetch the resticated users when the page loads
-    Provider.of<resticatedUsersProvider>(context, listen: false).fetchresticatedUsers();
+    // Fetch the restricted users when the page loads after the first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<RestrictedUsersProvider>(context, listen: false).fetchRestrictedUsers();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar.customAppBar("Total Resticated"),
-      body: Consumer<resticatedUsersProvider>(
+      appBar: CustomAppBar.customAppBar("Total Restricted"),
+      body: Consumer<RestrictedUsersProvider>(
         builder: (context, resticatedUsersProvider, child) {
-          final resticatedUsers = resticatedUsersProvider.resticatedUsers;
+          final resticatedUsers = resticatedUsersProvider.restrictedUsers;
+
+          // Handle loading state
+          if (resticatedUsers.isEmpty && resticatedUsersProvider.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          // Handle error state
+          if (resticatedUsersProvider.errorMessage != null) {
+            return Center(child: Text(resticatedUsersProvider.errorMessage!));
+          }
+
           return ListView.builder(
             itemCount: resticatedUsers.length,
             itemBuilder: (context, index) {
@@ -36,14 +49,9 @@ class _ResticatedListPageState extends State<ResticatedListPage> {
                   children: [
                     Text("Email: ${user.email}"),
                     Text("Manager Number: ${user.managerNumber}"),
-                    Text("Department: ${user.departmentName }"),
-                    Text("Phone Number: ${user.phone }"),
-                    Text("Role Number: ${user.role }"),
-
-
-
-
-
+                    Text("Department: ${user.departmentName}"),
+                    Text("Phone Number: ${user.phone}"),
+                    Text("Role Number: ${user.role}"),
                   ],
                 ),
               );
