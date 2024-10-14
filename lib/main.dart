@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:human_capital_management/Front%20side/Loginpage.dart';
 import 'Front side/dashBoard.dart';
+import 'Providers/goalprovider.dart';
 import 'Providers/managerprovider.dart';
 import 'Providers/resticatedprovider.dart';
 import 'Providers/usermodel.dart';
@@ -29,12 +30,11 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => UserProvider()), // Provide the UserProvider
+        ChangeNotifierProvider(create: (_) => UserProvider()..fetchUsers()),
         ChangeNotifierProvider(create: (context) => UserModel()),
         ChangeNotifierProvider(create: (context) => ManagersProvider()),
         ChangeNotifierProvider(create: (_) => resticatedUsersProvider()),
-
-
+        ChangeNotifierProvider(create: (_) => GoalProvider()),
       ],
       child: MaterialApp(
         routes: {
@@ -43,22 +43,31 @@ class MyApp extends StatelessWidget {
         },
         title: 'HCM-Human Capital Management',
         debugShowCheckedModeBanner: false,
-        home: StreamBuilder<User?>(
-          stream: FirebaseAuth.instance.authStateChanges(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              // While checking auth state, show a loading indicator
-              return Center(child: CircularProgressIndicator());
-            }
-            if (snapshot.hasData) {
-              // User is logged in
-              return DashboardPage(role: ''); // You can pass the user's role if needed
-            }
-            // User is not logged in
-            return LoginPage();
-          },
-        ),
+        home: AuthGate(),
       ),
     );
   }
+}
+
+class AuthGate extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.active) {
+          User? user = snapshot.data; // Get the current user
+          // Check if user is logged in
+          if (user != null) {
+            return DashboardPage(role: ''); // Redirect to dashboard
+          } else {
+            return LoginPage(); // Redirect to login page
+          }
+        }
+        // While checking the user state, show a loading indicator
+        return Center(child: CircularProgressIndicator());
+      },
+    );
+  }
+
 }
