@@ -65,13 +65,13 @@ class _RegisterPageState extends State<RegisterPage> {
                 Container(
                   height: MediaQuery.of(context).size.height * 0.3,
                   width: double.infinity,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: Colors.green,
                     borderRadius: BorderRadius.only(
                       bottomRight: Radius.circular(280),
                     ),
                   ),
-                  child: Align(
+                  child: const Align(
                     alignment: Alignment.bottomLeft,
                     child: Image(image: AssetImage('assets/images/login.png')),
                   ),
@@ -80,7 +80,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   alignment: Alignment.bottomCenter,
                   child: Container(
                     height: MediaQuery.of(context).size.height * 0.3,
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: Colors.green,
                       borderRadius: BorderRadius.only(
                         topLeft: Radius.circular(280),
