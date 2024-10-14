@@ -65,4 +65,5 @@ class ManagersProvider with ChangeNotifier {
       print('Error restricting manager: $e');
     }
   }
+
 }

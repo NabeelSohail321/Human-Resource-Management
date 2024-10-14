@@ -5,7 +5,8 @@ import 'package:human_capital_management/Front%20side/totalmanagerslistpage.dart
 import 'package:human_capital_management/Front%20side/totalresticationpage.dart';
 import 'package:provider/provider.dart';
 import '../Providers/usermodel.dart';
-import 'drawerfile.dart'; // Assuming this contains your custom drawer
+import 'drawerfile.dart';
+import 'goalassignment.dart'; // Assuming this contains your custom drawer
 
 class DashboardPage extends StatefulWidget {
   final String role;
@@ -140,6 +141,25 @@ class _DashboardPageState extends State<DashboardPage>
                   ),
                   onTap: (){
                     Navigator.push(context, MaterialPageRoute(builder: (context)=>const ResticatedListPage()));
+                  },
+                ),
+                InkWell(
+                  child: Card(
+                    elevation: 5,
+                    child: Container(
+                      width: 200,
+                      height: 200,
+                      child: const Center(child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text("Goal",style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold,color: Colors.blueGrey)),
+                          Text("Assignment",style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold,color: Colors.blueGrey)),
+                        ],
+                      )),
+                    ),
+                  ),
+                  onTap: (){
+                    Navigator.push(context, MaterialPageRoute(builder: (context)=> GoalAssignment()));
                   },
                 ),
 

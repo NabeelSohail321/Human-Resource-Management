@@ -8,7 +8,7 @@ class resticatedUsersProvider with ChangeNotifier {
   List<Manager> get resticatedUsers => _resticatedUsers;
 
   final DatabaseReference _databaseReference =
-  FirebaseDatabase.instance.ref().child('Resticated'); // Reference to the resticateed node
+  FirebaseDatabase.instance.ref().child('Restricted'); // Reference to the resticateed node
 
   void fetchresticatedUsers() {
     _databaseReference.onValue.listen((event) {

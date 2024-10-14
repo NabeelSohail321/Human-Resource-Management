@@ -17,7 +17,7 @@ class _SuperAdminPanelState extends State<SuperAdminPanel> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       userProvider.fetchUsers();
-      userProvider.fetchDepartments(); // Fetch departments when the widget is initialized
+      // userProvider.fetchDepartments(); // Fetch departments when the widget is initialized
     });
   }
 
