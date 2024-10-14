@@ -12,22 +12,24 @@ class GoalAssignment extends StatefulWidget {
 class _GoalAssignmentState extends State<GoalAssignment> {
   final descripController = TextEditingController();
   String? selectedManager; // To store the selected manager
+  String? selectedEmployee; // To store the selected manager
+
+
 
   @override
   void initState() {
     super.initState();
+    final userProvider = Provider.of<ManagersProvider>(context, listen: false);
+    userProvider.fetchManagers();
+    userProvider.fetchEmployees();
 
-    // Delay the fetch operation until after the first frame
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final userProvider = Provider.of<ManagersProvider>(context, listen: false);
-      userProvider.fetchManagers();
-    });
   }
 
   @override
   Widget build(BuildContext context) {
     final managersProvider = Provider.of<ManagersProvider>(context);
     final managersList = managersProvider.managers; // Fetch the list of managers from the provider
+    final EmployeeList = managersProvider.employees; // Fetch the list of managers from the provider
 
     return Scaffold(
       appBar: AppBar(
@@ -44,7 +46,15 @@ class _GoalAssignmentState extends State<GoalAssignment> {
               items: managersList.map((manager) {
                 return DropdownMenuItem<String>(
                   value: manager.uid, // Assuming each manager has a unique ID
-                  child: Text(manager.name), // Display manager's name in the dropdown
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(manager.name),
+                      SizedBox(width: 250,),
+                      Text(manager.departmentName),
+
+                    ],
+                  ), // Display manager's name in the dropdown
                 );
               }).toList(),
               onChanged: (newValue) {
@@ -59,6 +69,27 @@ class _GoalAssignmentState extends State<GoalAssignment> {
               ),
             ),
             SizedBox(height: 16),
+            DropdownButtonFormField<String>(
+              value: selectedEmployee,
+              hint: Text('Select Employee'),
+              items: managersList.map((manager) {
+                return DropdownMenuItem<String>(
+                  value: manager.uid, // Assuming each manager has a unique ID
+                  child: Text(manager.name), // Display manager's name in the dropdown
+                );
+              }).toList(),
+              onChanged: (newValue) {
+                setState(() {
+                  selectedEmployee = newValue;
+                });
+              },
+              decoration: InputDecoration(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
+              ),
+            ),
+
             // TextFormField for goal description
             TextFormField(
               controller: descripController,
