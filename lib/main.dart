@@ -34,6 +34,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (context) => UserModel()),
         ChangeNotifierProvider(create: (context) => ManagersProvider()),
         ChangeNotifierProvider(create: (_) => resticatedUsersProvider()),
+        ChangeNotifierProvider(create: (_) => GoalsProvider()),
+
       ],
       child: MaterialApp(
         routes: {
@@ -68,5 +70,4 @@ class AuthGate extends StatelessWidget {
       },
     );
   }
-
 }

@@ -1,5 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../Models/goalmodels.dart';
+import '../Models/managermodel.dart';
+import '../Providers/goalprovider.dart';
 import '../Providers/managerprovider.dart';
 
 class GoalAssignment extends StatefulWidget {
@@ -11,8 +15,8 @@ class GoalAssignment extends StatefulWidget {
 
 class _GoalAssignmentState extends State<GoalAssignment> {
   final descripController = TextEditingController();
-  String? selectedManager; // To store the selected manager
-  String? selectedEmployee; // To store the selected manager
+  String? selectedManager;
+  String? selectedEmployee;
 
 
 
@@ -21,14 +25,12 @@ class _GoalAssignmentState extends State<GoalAssignment> {
     super.initState();
     final userProvider = Provider.of<ManagersProvider>(context, listen: false);
     userProvider.fetchManagers();
-    userProvider.fetchEmployees();
   }
 
   @override
   Widget build(BuildContext context) {
     final managersProvider = Provider.of<ManagersProvider>(context);
     final managersList = managersProvider.managers; // Fetch the list of managers from the provider
-    final EmployeeList = managersProvider.employees; // Fetch the list of managers from the provider
 
     return Scaffold(
       appBar: AppBar(
@@ -38,7 +40,6 @@ class _GoalAssignmentState extends State<GoalAssignment> {
         padding: const EdgeInsets.all(8.0),
         child: Column(
           children: [
-            // Dropdown to select a manager
             DropdownButtonFormField<String>(
               value: selectedManager,
               hint: Text('Select Manager'),
@@ -49,7 +50,7 @@ class _GoalAssignmentState extends State<GoalAssignment> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(manager.name),
-                      SizedBox(width: 250,),
+                      SizedBox(width: 300,),
                       Text(manager.departmentName),
 
                     ],
@@ -67,29 +68,7 @@ class _GoalAssignmentState extends State<GoalAssignment> {
                 ),
               ),
             ),
-            SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              value: selectedEmployee,
-              hint: Text('Select Employee'),
-              items: EmployeeList.map((employee) {
-                return DropdownMenuItem<String>(
-                  value: employee.uid, // Assuming each manager has a unique ID
-                  child: Text(employee.name), // Display manager's name in the dropdown
-                );
-              }).toList(),
-              onChanged: (newValue) {
-                setState(() {
-                  selectedEmployee = newValue;
-                });
-              },
-              decoration: InputDecoration(
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.0),
-                ),
-              ),
-            ),
-
-            // TextFormField for goal description
+            SizedBox(height: 30,),
             TextFormField(
               controller: descripController,
               decoration: InputDecoration(
@@ -117,9 +96,87 @@ class _GoalAssignmentState extends State<GoalAssignment> {
                 ),
               ),
             ),
+            SizedBox(height: 30,),
+            ElevatedButton(
+              onPressed: () async {
+                await _addGoal(); // Call the method to add the goal
+              },
+              child: const Text("Add Goal"),
+            ),
           ],
         ),
       ),
     );
   }
+
+  // Future<void> _addGoal() async {
+  //   final managersProvider = Provider.of<ManagersProvider>(context, listen: false);
+  //   final goalsProvider = Provider.of<GoalsProvider>(context, listen: false);
+  //
+  //   // Check if the selected manager is not null and the description is not empty
+  //   if (selectedManager != null && descripController.text.isNotEmpty) {
+  //     final selectedManagerData = managersProvider.managers.firstWhere(
+  //             (manager) => manager.uid == selectedManager,
+  //         orElse: () => Manager(uid: '', name: '', email: '', phone: '', departmentName: '', managerNumber: '', role: '', status: '')
+  //     );
+  //
+  //     // Create a new Goal object
+  //     Goal newGoal = Goal(
+  //       id: DateTime.now().millisecondsSinceEpoch.toString(), // Unique ID
+  //       mdId: FirebaseAuth.instance.currentUser!.uid, // Replace with the actual MD ID
+  //       managerId: selectedManager!,
+  //       managerName: selectedManagerData.name,
+  //       managerNumber: selectedManagerData.managerNumber,
+  //       departmentName: selectedManagerData.departmentName,
+  //       description: descripController.text,
+  //       dateTime: DateTime.now(), // Current date and time
+  //     );
+  //
+  //     try {
+  //       await goalsProvider.addGoal(newGoal);
+  //       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Goal added successfully!')));
+  //     } catch (e) {
+  //       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to add goal: $e')));
+  //     }
+  //   } else {
+  //     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please select a manager and enter a description.')));
+  //   }
+  // }
+
+
+  Future<void> _addGoal() async {
+    final managersProvider = Provider.of<ManagersProvider>(context, listen: false);
+    final goalsProvider = Provider.of<GoalsProvider>(context, listen: false);
+
+    // Check if the selected manager is not null and the description is not empty
+    if (selectedManager != null && descripController.text.isNotEmpty) {
+      final selectedManagerData = managersProvider.managers.firstWhere(
+              (manager) => manager.uid == selectedManager,
+          orElse: () => Manager(uid: '', name: '', email: '', phone: '', departmentName: '', managerNumber: '', role: '', status: '')
+      );
+
+      // Create a new Goal object without an ID yet
+      Goal newGoal = Goal(
+        id: '', // Set a placeholder; we'll update this with Firebase key later
+        mdId: FirebaseAuth.instance.currentUser!.uid, // Actual MD ID
+        managerId: selectedManager!,
+        managerName: selectedManagerData.name,
+        managerNumber: selectedManagerData.managerNumber,
+        departmentName: selectedManagerData.departmentName,
+        description: descripController.text,
+        dateTime: DateTime.now(), // Current date and time
+      );
+
+      try {
+        // Add the goal using the GoalsProvider
+        await goalsProvider.addGoal(newGoal);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Goal added successfully!')));
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to add goal: $e')));
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please select a manager and enter a description.')));
+    }
+  }
+
 }
