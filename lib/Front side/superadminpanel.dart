@@ -78,14 +78,14 @@ class _SuperAdminPanelState extends State<SuperAdminPanel> {
                         ],
                         onChanged: (value) {
                           if (value != null) {
-                            userProvider.updateUserRole(user['uid'], value);
+                            userProvider.updateUserRole(user['uid'], value,context);
                           }
                         },
                       ),
                       DropdownButton<String>(
                         value: selectedDepartmentId, // Use selectedDepartmentId here
                         items: [
-                           DropdownMenuItem(
+                          DropdownMenuItem(
                             value: 'no_department',
                             child: Text('${user['departmentName'] ?? 'No Department'}'),
                           ),
@@ -98,7 +98,7 @@ class _SuperAdminPanelState extends State<SuperAdminPanel> {
                         ],
                         onChanged: (newDepartmentId) {
                           if (newDepartmentId != null) {
-                          // Update department using the selected department ID
+                            // Update department using the selected department ID
                             String newDepartmentName = departmentMap[newDepartmentId] ?? '';
                             userProvider.updateUserDepartment(user['uid'], newDepartmentName);
                           }

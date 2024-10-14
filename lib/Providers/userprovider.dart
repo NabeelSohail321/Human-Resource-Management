@@ -101,7 +101,7 @@ class UserProvider extends ChangeNotifier {
         // Add all subsequent users to the Employees node
         int employeeNumber = (await _dbRef.child('Employee').once()).snapshot.children.length + 1; // Generate employee number
         // userData['employeeNumber'] = employeeNumber;
-          userData['employeeNumber'] = "EMP- ${employeeNumber}";
+        userData['employeeNumber'] = "EMP- ${employeeNumber}";
 
         // Add subsequent users to the Employees node
         await _dbRef.child('Employee').child(uid).set(userData);
@@ -266,7 +266,7 @@ class UserProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> updateUserRole(String uid, String newRole) async {
+  Future<void> updateUserRole(String uid, String newRole, BuildContext context) async {
     try {
       // Check which node the user is currently in
       DataSnapshot employeeSnapshot = await _employeeRef.child(uid).get();
@@ -274,50 +274,68 @@ class UserProvider extends ChangeNotifier {
       DataSnapshot managerSnapshot = await _managerRef.child(uid).get();
       Map<String, dynamic>? userData;
 
-      // Remove the user from their current role node and retrieve their data
+      // Retrieve the user data without removing them yet
       if (employeeSnapshot.exists) {
         userData = Map<String, dynamic>.from(employeeSnapshot.value as Map);
-        await _employeeRef.child(uid).remove(); // Remove from Employee node
       } else if (hrSnapshot.exists) {
         userData = Map<String, dynamic>.from(hrSnapshot.value as Map);
-        await _mdRef.child(uid).remove(); // Remove from MD node
       } else if (managerSnapshot.exists) {
         userData = Map<String, dynamic>.from(managerSnapshot.value as Map);
-        await _managerRef.child(uid).remove(); // Remove from Manager node
       }
 
       if (userData != null) {
         // Determine the new node for the user based on the new role
         DatabaseReference newRef;
-        String? employeeNumber = userData['employeeNumber']; // Preserve the employee number if present
-        String? managerNumber; // Manager number for managers
-        String roleChangeDate = DateTime.now().toString(); // Get the current date and time for the role change
+        String? employeeNumber = userData['employeeNumber'];
+        String? managerNumber;
+        String roleChangeDate = DateTime.now().toString();
+        String departmentName = userData['departmentName'] ?? '';
 
-        // Handle different roles
-        if (newRole == '0') { // MD role
-          newRef = _mdRef;
-          employeeNumber = null; // Remove employee number for MD role
-          managerNumber = null; // Remove manager number for MD role
+        // If new role is Manager (role = '2'), ensure no other manager exists in the department
+        if (newRole == '2') {
+          Query departmentManagerQuery = _managerRef
+              .orderByChild('departmentName')
+              .equalTo(departmentName);
+          DataSnapshot departmentManagersSnapshot = await departmentManagerQuery.get();
+
+          if (departmentManagersSnapshot.exists) {
+            // If the department already has a manager, stop the role update
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: Department $departmentName already has a manager.')));
+            return; // Prevent multiple managers for the same department
+          }
+
+          newRef = _managerRef;
+          employeeNumber = null;
+
+          // Generate a manager number if the user is transitioning to a manager role
+          int highestManagerNumber = await _getHighestManagerNumber();
+          managerNumber = 'MGR-${highestManagerNumber + 1}';
+          print('Generated new manager number: $managerNumber');
         } else if (newRole == '1') { // Employee role
           newRef = _employeeRef;
-          managerNumber = null; // Remove manager number for Employee role
+          managerNumber = null;
 
           // Generate a new employee number if it doesn't exist
           if (employeeNumber == null) {
             int highestEmployeeNumber = await _getHighestEmployeeNumber();
-            employeeNumber = 'EMP-${highestEmployeeNumber + 1}'; // Generate a new unique employee number
+            employeeNumber = 'EMP-${highestEmployeeNumber + 1}';
             print('Generated new employee number: $employeeNumber');
           }
-        } else if (newRole == '2') { // Manager role
-          newRef = _managerRef;
-          employeeNumber = null; // Remove employee number for Manager role
-
-          // Generate a manager number if the user is transitioning to a manager role
-          int highestManagerNumber = await _getHighestManagerNumber();
-          managerNumber = 'MGR-${highestManagerNumber + 1}'; // Generate a new unique manager number
-          print('Generated new manager number: $managerNumber');
+        } else if (newRole == '0') { // MD role
+          newRef = _mdRef;
+          employeeNumber = null;
+          managerNumber = null;
         } else {
           return; // Invalid role, do nothing
+        }
+
+        // Remove the user from their current role node if transitioning to a new role
+        if (employeeSnapshot.exists) {
+          await _employeeRef.child(uid).remove();
+        } else if (hrSnapshot.exists) {
+          await _mdRef.child(uid).remove();
+        } else if (managerSnapshot.exists) {
+          await _managerRef.child(uid).remove();
         }
 
         // Save the user data to the new role node, preserving relevant fields and adding the role change date
@@ -328,22 +346,23 @@ class UserProvider extends ChangeNotifier {
           'password': userData['password'] ?? '',
           'phone': userData['phone'] ?? '',
           'role': newRole,
-          'departmentName':userData['departmentName'] ?? '',
+          'departmentName': userData['departmentName'] ?? '',
           'user status': userData['user status'],
-          'employeeNumber': employeeNumber, // Add or retain employee number as necessary
-          'managerNumber': managerNumber, // Add manager number for Manager role
+          'employeeNumber': employeeNumber,
+          'managerNumber': managerNumber,
           'Registration Date': userData['Registration Date'] ?? '',
-          'Role Change Date': roleChangeDate, // Add the role change date
+          'Role Change Date': roleChangeDate,
         });
 
         print('User role updated successfully with manager number: $managerNumber');
-
         fetchUsers(); // Refresh the list of users after the update
       }
     } catch (e) {
       print('Error updating user role: $e');
     }
   }
+
+
 
   Future<int> _getHighestEmployeeNumber() async {
     int highestEmployeeNumber = 0;
