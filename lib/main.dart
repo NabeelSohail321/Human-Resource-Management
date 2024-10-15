@@ -7,11 +7,13 @@ import 'package:human_capital_management/Front%20side/superadminpanel.dart';
 import 'Front side/dashBoard.dart';
 import 'Front side/employeedashboard.dart';
 import 'Front side/goalassignment.dart';
+import 'Front side/goalsbyManager.dart';
 import 'Front side/managerDashboard.dart';
 import 'Front side/total_departs.dart';
 import 'Front side/totalgoalspage.dart';
 import 'Front side/totalmanagerslistpage.dart';
 import 'Front side/totalresticationpage.dart';
+import 'Providers/employeeprovider.dart';
 import 'Providers/goalprovider.dart';
 import 'Providers/managerprovider.dart';
 import 'Providers/resticatedprovider.dart';
@@ -44,11 +46,13 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (context) => ManagersProvider()),
         ChangeNotifierProvider(create: (_) => RestrictedUsersProvider()),
         ChangeNotifierProvider(create: (_) => GoalsProvider()),
+        ChangeNotifierProvider(create: (_) => EmployeeProvider()),
+
       ],
       child: MaterialApp(
         routes: {
           '/frontPage': (context) => const DashboardPage(),
-          '/managerpage': (context) => HRDashboard(),
+          '/managerPage': (context) => HRDashboard(),
           '/login': (context) => const LoginPage(),
           '/totaldepartments': (context) => DepartmentListPage(),
           '/totalmanagers': (context) => const ManagersListPage(),
@@ -58,8 +62,7 @@ class MyApp extends StatelessWidget {
           '/goalassignments': (context) => const GoalAssignment(),
           '/totalgoalslist': (context) => const TotalGoalsPage(),
           '/employeepage': (context) => const EmployeeDashBoard(),
-
-
+          '/goalsbymanager': (context) => const Goalsbymanager(),
 
         },
         title: 'HCM-Human Capital Management',
@@ -117,7 +120,7 @@ class AuthGate extends StatelessWidget {
                   if (userRole == 'MD') {
                     // Navigate to MD Page
                     WidgetsBinding.instance!.addPostFrameCallback((_) {
-                      Navigator.pushReplacementNamed(context, '/mdPage');
+                      Navigator.pushReplacementNamed(context, '/frontPage');
                     });
                   } else if (userRole == 'Manager') {
                     // Navigate to Manager Page

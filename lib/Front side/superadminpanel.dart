@@ -65,7 +65,6 @@ class _SuperAdminPanelState extends State<SuperAdminPanel> {
                       Text("E-Mail: ${user['email'] ?? 'No Email'}"),
                       Text("Role: ${user['role'] == '0' ? 'HR' : user['role'] == '1' ? 'Employee' : 'Manager'}"),
                       Text("Department: ${user['departmentName'] ?? 'No Department'}"), // Add this line
-
                     ],
                   ),
                   trailing: Row(
