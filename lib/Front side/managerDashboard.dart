@@ -4,6 +4,7 @@ import 'package:human_capital_management/Providers/managerprovider.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:intl/intl.dart';
+import '../Providers/employeeprovider.dart';
 import '../Providers/goalprovider.dart';
 import '../Providers/usermodel.dart';
 import 'drawerfile.dart';
@@ -76,6 +77,21 @@ class _HRDashboardState extends State<HRDashboard> with SingleTickerProviderStat
     final goalsProvider = Provider.of<GoalsProvider>(context, listen: false);
     goalsProvider.initialize(); // Ensure this is called to fetch goals
 
+
+    // Fetch the current manager's department
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final managerProvider = Provider.of<ManagersProvider>(context, listen: false);
+      await managerProvider.fetchManagers(); // Fetch managers
+
+      final currentManager = managerProvider.currentManager;
+      if (currentManager != null) {
+        // Call the fetchTotalEmployeeCount method with the current manager's department
+        final employeeProvider = Provider.of<EmployeeProvider>(context, listen: false);
+        await employeeProvider.fetchTotalEmployeeCount(currentManager.departmentName);
+      }
+    });
+
+
   }
 
   void _scrollListener() {
@@ -126,6 +142,7 @@ class _HRDashboardState extends State<HRDashboard> with SingleTickerProviderStat
     final managerProvider = Provider.of<ManagersProvider>(context);
     final currentManager = managerProvider.currentManager;
     final goalsProvider = Provider.of<GoalsProvider>(context);
+    final empProvider = Provider.of<EmployeeProvider>(context);
 
     final screenSize = MediaQuery.of(context).size;
 
@@ -232,7 +249,9 @@ class _HRDashboardState extends State<HRDashboard> with SingleTickerProviderStat
                                     print("Employee Days Absent tapped!");
                                     // You could navigate to a detailed page or show a modal with more information.
                                   }),
-                                  buildMetricTile("Total Employees", "28", () {
+                                  buildMetricTile("Total Employees", "${empProvider.totalEmployeeCount}", () {
+                                    Navigator.pushNamed(context, ('/employeesbymanager'));
+
                                     print("Total Employees tapped!");
                                   }),
                                   buildMetricTile("Pre-approved Absences", "188", () {

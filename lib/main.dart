@@ -7,12 +7,15 @@ import 'package:human_capital_management/Front%20side/superadminpanel.dart';
 import 'Front side/dashBoard.dart';
 import 'Front side/employeedashboard.dart';
 import 'Front side/goalassignment.dart';
+import 'Front side/goalsbyManager.dart';
 import 'Front side/managerDashboard.dart';
 import 'Front side/total_departs.dart';
+import 'Front side/totalempbymanager.dart';
 import 'Front side/totalgoalspage.dart';
 import 'Front side/totalmanagerslistpage.dart';
 import 'Front side/totalresticationpage.dart';
 import 'Providers/AttendanceProvider.dart';
+import 'Providers/employeeprovider.dart';
 import 'Providers/goalprovider.dart';
 import 'Providers/managerprovider.dart';
 import 'Providers/resticatedprovider.dart';
@@ -46,6 +49,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => RestrictedUsersProvider()),
         ChangeNotifierProvider(create: (_) => GoalsProvider()),
         ChangeNotifierProvider(create: (_) => AttendanceProvider()),
+        ChangeNotifierProvider(create: (_) => GoalsProvider()),
+        ChangeNotifierProvider(create: (_) => EmployeeProvider()),
       ],
       child: MaterialApp(
         routes: {
@@ -60,8 +65,8 @@ class MyApp extends StatelessWidget {
           '/goalassignments': (context) => const GoalAssignment(),
           '/totalgoalslist': (context) => const TotalGoalsPage(),
           '/employeepage': (context) => const EmployeeDashBoard(),
-
-
+          '/goalsbymanager':(context)=> const Goalsbymanager(),
+          '/employeesbymanager':(context)=> const TotalEmpBasedOnManager(),
 
         },
         title: 'HCM-Human Capital Management',
@@ -71,27 +76,6 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-// class AuthGate extends StatelessWidget {
-//   @override
-//   Widget build(BuildContext context) {
-//     return StreamBuilder<User?>(
-//       stream: FirebaseAuth.instance.authStateChanges(),
-//       builder: (context, snapshot) {
-//         if (snapshot.connectionState == ConnectionState.active) {
-//           User? user = snapshot.data; // Get the current user
-//           // Check if user is logged in
-//           if (user != null) {
-//
-//           }
-//         }
-//         // While checking the user state, show a loading indicator
-//         return Center(child: CircularProgressIndicator());
-//       },
-//     );
-//   }
-// }
-
 
 class AuthGate extends StatelessWidget {
   @override
@@ -124,7 +108,7 @@ class AuthGate extends StatelessWidget {
                   } else if (userRole == 'Manager') {
                     // Navigate to Manager Page
                     WidgetsBinding.instance!.addPostFrameCallback((_) {
-                      Navigator.pushReplacementNamed(context, '/managerPage');
+                      Navigator.pushReplacementNamed(context, '/managerpage');
                     });
                   } else if (userRole == 'Employee') {
                     // Navigate to Employee Page
