@@ -103,7 +103,7 @@ class _SuperAdminPanelState extends State<SuperAdminPanel> {
                           if (newDepartmentId != null) {
                             // Update department using the selected department ID
                             String newDepartmentName = departmentMap[newDepartmentId] ?? '';
-                            userProvider.updateUserDepartment(user['uid'], newDepartmentName);
+                            userProvider.updateUserDepartment(user['uid'], newDepartmentName,context);
                           }
                         },                      ),
                       const SizedBox(width: 10), // Spacing between dropdowns
