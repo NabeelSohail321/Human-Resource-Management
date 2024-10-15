@@ -556,7 +556,7 @@ class UserProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> updateUserDepartment(String uid, String newDepartmentName) async {
+  Future<void> updateUserDepartment(String uid, String newDepartmentName, BuildContext context) async {
     try {
       // Check which node the user is currently in
       DataSnapshot employeeSnapshot = await _employeeRef.child(uid).get();
@@ -582,6 +582,19 @@ class UserProvider extends ChangeNotifier {
 
       // Update the user's department within their current node
       if (userData != null) {
+
+        final department = userData['departmentName'];
+
+        final role = userData['role'].toString();
+
+        if(role == '2'){
+          final snapshot = await _managerRef.orderByChild('departmentName').equalTo(department).get();
+          if(snapshot.exists){
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Manager Already Exist for that department $department')));
+            return;
+          }
+        }
+
         // Add or update the department field in the user's data
         await currentUserRef.update({
           'departmentName': newDepartmentName, // Use the department name
