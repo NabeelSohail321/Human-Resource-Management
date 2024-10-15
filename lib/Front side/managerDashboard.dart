@@ -1,12 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:human_capital_management/Models/managermodel.dart';
 import 'package:human_capital_management/Providers/managerprovider.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:intl/intl.dart';
+import '../Providers/goalprovider.dart';
 import '../Providers/usermodel.dart';
-import '../Providers/userprovider.dart';
 import 'drawerfile.dart';
 
 class HRDashboard extends StatefulWidget {
@@ -26,7 +25,6 @@ class _HRDashboardState extends State<HRDashboard> with SingleTickerProviderStat
     end: DateTime.now(),
   );
 
-  String selectedDepartment = "All";
 
   // ScrollController for GridView
   final ScrollController _scrollController = ScrollController();
@@ -38,7 +36,6 @@ class _HRDashboardState extends State<HRDashboard> with SingleTickerProviderStat
     _scrollController.dispose();
     super.dispose();
   }
-
 
   @override
   void initState() {
@@ -57,23 +54,29 @@ class _HRDashboardState extends State<HRDashboard> with SingleTickerProviderStat
 
     _scrollController.addListener(_scrollListener);
 
-    // Ensure we fetch the current manager's details after the first frame is rendered
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final user = FirebaseAuth.instance.currentUser;
+    // Ensure we fetch the current manager's details after the managers have been loaded
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final user = FirebaseAuth.instance.currentUser; // Get the current user
       if (user != null) {
         final managerProvider = Provider.of<ManagersProvider>(context, listen: false);
+        await managerProvider.fetchManagers(); // Ensure managers are fetched
         managerProvider.fetchCurrentManagerByUid(user.uid); // Fetch the current manager using UID
       }
     });
 
+    // Get the current user and fetch user details
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      user = FirebaseAuth.instance.currentUser; // Get the current user
+      final user = FirebaseAuth.instance.currentUser; // Get the current user
       if (user != null) {
-        Provider.of<UserModel>(context, listen: false).fetchUserDetails(user!.uid);
+        Provider.of<UserModel>(context, listen: false).fetchUserDetails(user.uid);
       }
     });
-  }
 
+    // Fetch goals for the current manager when the widget is initialized
+    final goalsProvider = Provider.of<GoalsProvider>(context, listen: false);
+    goalsProvider.initialize(); // Ensure this is called to fetch goals
+
+  }
 
   void _scrollListener() {
     if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent) {
@@ -122,7 +125,7 @@ class _HRDashboardState extends State<HRDashboard> with SingleTickerProviderStat
   Widget build(BuildContext context) {
     final managerProvider = Provider.of<ManagersProvider>(context);
     final currentManager = managerProvider.currentManager;
-    String selectedDepartment = currentManager?.departmentName ?? "All";
+    final goalsProvider = Provider.of<GoalsProvider>(context);
 
     final screenSize = MediaQuery.of(context).size;
 
@@ -184,20 +187,29 @@ class _HRDashboardState extends State<HRDashboard> with SingleTickerProviderStat
                             ),
                             SizedBox(width: 16),
                             Expanded(
-                              child: DropdownButtonFormField<String>(
-                                value: selectedDepartment,
+                              child: currentManager != null // Check if currentManager is not null
+                                  ? DropdownButtonFormField<String>(
+                                value: currentManager.departmentName, // Set the value to the current manager's department
                                 onChanged: (newValue) {
-                                  setState(() {
-                                    selectedDepartment = newValue!;
-                                  });
+                                  // On change, you can choose to do nothing or handle it
+                                  // If you don't want any changes, you can leave this empty
+                                  // For example, just remove the setState if you don't need to do anything
                                 },
                                 items: [
-                                  DropdownMenuItem(value: currentManager?.departmentName, child: Text(currentManager?.departmentName ?? "All")),
+                                  // Create a single DropdownMenuItem using the current manager's department name
+                                  DropdownMenuItem(
+                                    value: currentManager.departmentName,
+                                    child: Text(currentManager.departmentName),
+                                  ),
                                 ],
                                 decoration: InputDecoration(
                                   border: OutlineInputBorder(),
                                   labelText: "Department",
                                 ),
+                              )
+                                  : Container( // Display a placeholder or empty widget when the manager is not available
+                                padding: EdgeInsets.symmetric(vertical: 8.0),
+                                child: Text("Loading..."), // Indicate loading state or show nothing
                               ),
                             ),
                           ],
@@ -215,14 +227,32 @@ class _HRDashboardState extends State<HRDashboard> with SingleTickerProviderStat
                                 crossAxisSpacing: 16,
                                 mainAxisSpacing: 16,
                                 children: [
-                                  buildMetricTile("Employee Days Absent", "296"),
-                                  buildMetricTile("Total Employees", "28"),
-                                  buildMetricTile("Pre-approved Absences", "188"),
-                                  buildMetricTile("Overtime Hours", "156"),
-                                  buildMetricTile("Unscheduled Days Leave", "108"),
-                                  buildMetricTile("Employee Days Present", "1248"),
-                                  buildMetricTile("Sick Leave vs. Casual Leave", "78 / 76"),
-                                  buildMetricTile("Employees on Probation", "8"),
+                                  buildMetricTile("Total Goals", "${goalsProvider.totalGoalsCount}", () {
+                                    Navigator.pushNamed(context, ('/goalsbymanager'));
+                                    print("Employee Days Absent tapped!");
+                                    // You could navigate to a detailed page or show a modal with more information.
+                                  }),
+                                  buildMetricTile("Total Employees", "28", () {
+                                    print("Total Employees tapped!");
+                                  }),
+                                  buildMetricTile("Pre-approved Absences", "188", () {
+                                    print("Pre-approved Absences tapped!");
+                                  }),
+                                  buildMetricTile("Overtime Hours", "156", () {
+                                    print("Overtime Hours tapped!");
+                                  }),
+                                  buildMetricTile("Unscheduled Days Leave", "108", () {
+                                    print("Unscheduled Days Leave tapped!");
+                                  }),
+                                  buildMetricTile("Employee Days Present", "1248", () {
+                                    print("Employee Days Present tapped!");
+                                  }),
+                                  buildMetricTile("Sick Leave vs. Casual Leave", "78 / 76", () {
+                                    print("Sick Leave vs. Casual Leave tapped!");
+                                  }),
+                                  buildMetricTile("Employees on Probation", "8", () {
+                                    print("Employees on Probation tapped!");
+                                  }),
                                 ],
                               ),
                               // Floating Action Button
@@ -330,23 +360,27 @@ class _HRDashboardState extends State<HRDashboard> with SingleTickerProviderStat
     );
   }
 
-  Widget buildMetricTile(String title, String value) {
-    return Container(
-      padding: EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12.0),
-        color: Colors.grey[200],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          Text(value, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-        ],
+  Widget buildMetricTile(String title, String value, VoidCallback onPress) {
+    return GestureDetector(
+      onTap: onPress,
+      child: Container(
+        padding: EdgeInsets.all(16.0),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12.0),
+          color: Colors.grey[200],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            Text(value, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+          ],
+        ),
       ),
     );
   }
+
 
   List<WorkLocationData> getWorkLocationData() {
     return [
@@ -383,3 +417,51 @@ class DepartmentAttendanceData {
   DepartmentAttendanceData(this.department, this.attendanceRate);
 }
 
+class DashboardItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onButtonPressed;
+
+  const DashboardItem({
+    Key? key,
+    required this.icon,
+    required this.label,
+    required this.onButtonPressed,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onButtonPressed,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.teal.shade100,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: Colors.teal,
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 50,
+              color: Colors.black87,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

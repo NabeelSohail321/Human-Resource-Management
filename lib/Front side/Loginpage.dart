@@ -366,7 +366,7 @@ class _LoginPageState extends State<LoginPage> {
 
           break;
         case '2':
-          Navigator.pushReplacementNamed(context, '/managerpage');
+          Navigator.pushReplacementNamed(context, '/managerPage');
 
           break;
         default:
