@@ -26,6 +26,12 @@ class UserProvider extends ChangeNotifier {
   List<Map<String, dynamic>> get depart => _departments;
 
 
+  UserProvider(){
+    _auth.authStateChanges().listen((User? user) {
+      _user = user;
+      notifyListeners(); // Notify listeners when the authentication state changes
+    });
+  }
 
   Future<void> fetchtotalDepartments() async {
     try {

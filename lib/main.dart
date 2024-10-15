@@ -12,6 +12,7 @@ import 'Front side/total_departs.dart';
 import 'Front side/totalgoalspage.dart';
 import 'Front side/totalmanagerslistpage.dart';
 import 'Front side/totalresticationpage.dart';
+import 'Providers/AttendanceProvider.dart';
 import 'Providers/goalprovider.dart';
 import 'Providers/managerprovider.dart';
 import 'Providers/resticatedprovider.dart';
@@ -44,6 +45,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (context) => ManagersProvider()),
         ChangeNotifierProvider(create: (_) => RestrictedUsersProvider()),
         ChangeNotifierProvider(create: (_) => GoalsProvider()),
+        ChangeNotifierProvider(create: (_) => AttendanceProvider()),
       ],
       child: MaterialApp(
         routes: {
