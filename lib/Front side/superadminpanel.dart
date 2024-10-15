@@ -9,6 +9,9 @@ class SuperAdminPanel extends StatefulWidget {
 }
 
 class _SuperAdminPanelState extends State<SuperAdminPanel> {
+
+  String selectedWorkplace = "None Selected";
+  List<String> workplace = ["None Selected", "Work From Home", "Work From Office"];
   @override
   void initState() {
     super.initState();
@@ -108,7 +111,6 @@ class _SuperAdminPanelState extends State<SuperAdminPanel> {
                     ],
                   ),
                 );
-
               },
             ),
           ],

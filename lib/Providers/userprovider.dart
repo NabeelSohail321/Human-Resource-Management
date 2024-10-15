@@ -8,7 +8,7 @@ class UserProvider extends ChangeNotifier {
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
   User? _user;
   User? get user => _user;
-  bool _isFirstUser = true;
+  final bool _isFirstUser = true;
   bool get isFirstUser => _isFirstUser;
   List<Map<String, dynamic>> get users => _users;
   bool get isLoading => _isLoading;
