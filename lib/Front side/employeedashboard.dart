@@ -39,12 +39,23 @@ class _EmployeeDashBoardState extends State<EmployeeDashBoard> with SingleTicker
     // Delay fetch operation until the first frame is rendered
     user = FirebaseAuth.instance.currentUser;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-       // Get the current user
+
       if (user != null) {
         Provider.of<UserModel>(context).fetchUserDetails(user!.uid);
       }
     });
+
+    // Delay fetch operation until the first frame is rendered
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      user = FirebaseAuth.instance.currentUser; // Get the current user
+      if (user != null) {
+        Provider.of<UserModel>(context, listen: false).fetchUserDetails(user!.uid);
+      }
+    });
+
   }
+
+
   void toggleDrawer() {
     if (isDrawerOpen) {
       _animationController.reverse();
@@ -75,6 +86,15 @@ class _EmployeeDashBoardState extends State<EmployeeDashBoard> with SingleTicker
           // Animated content that moves to the side when the drawer is open
           SlideTransition(
             position: _contentSlideAnimation,
+            child: Container(
+              width: screenSize.width,
+              child: ElevatedButton(onPressed: (){
+                Navigator.push(context, MaterialPageRoute(builder: (context) {
+                  return AttendanceScreen(userId: user!.uid,);
+                },));
+              }, child: Text("Attendance")),
+            )
+            ,
           ),
           // Drawer widget that slides in/out
           SlideTransition(
@@ -84,11 +104,6 @@ class _EmployeeDashBoardState extends State<EmployeeDashBoard> with SingleTicker
               child:  Drawerfrontside(), // Your custom drawer widget
             ),
           ),
-          ElevatedButton(onPressed: (){
-            Navigator.push(context, MaterialPageRoute(builder: (context) {
-              return AttendanceScreen(userId: user!.uid,);
-            },));
-          }, child: Text("Attendance"))
         ],
       ),
 
