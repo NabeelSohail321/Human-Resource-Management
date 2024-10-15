@@ -5,6 +5,7 @@ import 'package:human_capital_management/Front%20side/Loginpage.dart';
 import 'package:human_capital_management/Front%20side/adddepartments.dart';
 import 'package:human_capital_management/Front%20side/superadminpanel.dart';
 import 'Front side/dashBoard.dart';
+import 'Front side/employeedashboard.dart';
 import 'Front side/goalassignment.dart';
 import 'Front side/managerDashboard.dart';
 import 'Front side/total_departs.dart';
@@ -56,6 +57,8 @@ class MyApp extends StatelessWidget {
           '/adddepartments': (context) => AddDepartmentPage(),
           '/goalassignments': (context) => const GoalAssignment(),
           '/totalgoalslist': (context) => const TotalGoalsPage(),
+          '/employeepage': (context) => const EmployeeDashBoard(),
+
 
 
         },

@@ -362,10 +362,8 @@ class _LoginPageState extends State<LoginPage> {
           Navigator.pushReplacementNamed(context, '/frontPage');
           break;
         case '1':
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => DashboardPage()),
-          );
+          Navigator.pushReplacementNamed(context, '/employeepage');
+
           break;
         case '2':
           Navigator.pushReplacementNamed(context, '/managerpage');
