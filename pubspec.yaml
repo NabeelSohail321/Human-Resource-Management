@@ -43,6 +43,10 @@ dependencies:
   intl: any
   syncfusion_flutter_charts: ^20.3.48
   syncfusion_flutter_gauges: ^20.3.48
+  google_maps_flutter: ^2.0.6
+  geolocator: ^12.0.0
+  geocoding: ^3.0.0
+
 
 dev_dependencies:
   flutter_test:

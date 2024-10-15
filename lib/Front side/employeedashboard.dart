@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../Providers/usermodel.dart';
+import 'Attendance.dart';
 import 'drawerfile.dart';
 
 class EmployeeDashBoard extends StatefulWidget {
@@ -36,10 +37,11 @@ class _EmployeeDashBoardState extends State<EmployeeDashBoard> with SingleTicker
         .animate(CurvedAnimation(parent: _animationController, curve: Curves.easeInOut));
 
     // Delay fetch operation until the first frame is rendered
+    user = FirebaseAuth.instance.currentUser;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      user = FirebaseAuth.instance.currentUser; // Get the current user
+       // Get the current user
       if (user != null) {
-        Provider.of<UserModel>(context, listen: false).fetchUserDetails(user!.uid);
+        Provider.of<UserModel>(context).fetchUserDetails(user!.uid);
       }
     });
   }
@@ -54,11 +56,12 @@ class _EmployeeDashBoardState extends State<EmployeeDashBoard> with SingleTicker
     });
   }
 
+
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size; // Get screen size dynamically
 
-    return Scaffold(
+    return user!=null? Scaffold(
       key: _scaffoldKey,
       appBar: AppBar(
         leading: IconButton(
@@ -81,9 +84,16 @@ class _EmployeeDashBoardState extends State<EmployeeDashBoard> with SingleTicker
               child:  Drawerfrontside(), // Your custom drawer widget
             ),
           ),
+          ElevatedButton(onPressed: (){
+            Navigator.push(context, MaterialPageRoute(builder: (context) {
+              return AttendanceScreen(userId: user!.uid,);
+            },));
+          }, child: Text("Attendance"))
         ],
       ),
 
+    ):Scaffold(
+      body: Center(child: Text('Login First')),
     );
   }
 }
