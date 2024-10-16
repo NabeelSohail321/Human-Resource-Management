@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:human_capital_management/Front%20side/EmployeeGoals.dart';
 import 'package:provider/provider.dart';
-
 import '../Providers/usermodel.dart';
 import 'Attendance.dart';
 import 'drawerfile.dart';
@@ -86,13 +86,28 @@ class _EmployeeDashBoardState extends State<EmployeeDashBoard> with SingleTicker
           // Animated content that moves to the side when the drawer is open
           SlideTransition(
             position: _contentSlideAnimation,
-            child: Container(
-              width: screenSize.width,
-              child: ElevatedButton(onPressed: (){
-                Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return AttendanceScreen(userId: user!.uid,);
-                },));
-              }, child: Text("Attendance")),
+            child: Center(
+              child: Column(
+                children: [
+                  Container(
+                    width: screenSize.width*0.2,
+                    child: ElevatedButton(onPressed: (){
+                      Navigator.push(context, MaterialPageRoute(builder: (context) {
+                        return AttendanceScreen(userId: user!.uid,);
+                      },));
+                    }, child: Text("Attendance")),
+                  ),
+                  Container(
+                    width: screenSize.width*0.2,
+                    child: ElevatedButton(onPressed: (){
+                      Navigator.push(context, MaterialPageRoute(builder: (context) {
+                        return EmployeeGoals();
+                      },));
+                    }, child: Text("Goals")),
+                  ),
+                ],
+              ),
+
             )
             ,
           ),
