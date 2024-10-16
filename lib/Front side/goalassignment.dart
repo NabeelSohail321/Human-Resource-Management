@@ -5,6 +5,7 @@ import '../Models/goalmodels.dart';
 import '../Models/managermodel.dart';
 import '../Providers/goalprovider.dart';
 import '../Providers/managerprovider.dart';
+import '../components.dart';
 
 class GoalAssignment extends StatefulWidget {
   const GoalAssignment({super.key});
@@ -33,9 +34,7 @@ class _GoalAssignmentState extends State<GoalAssignment> {
     final managersList = managersProvider.managers; // Fetch the list of managers from the provider
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Goal Assignment Page"),
-      ),
+      appBar: CustomAppBar.customAppBar("Goals Assignment Page"),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
@@ -109,41 +108,6 @@ class _GoalAssignmentState extends State<GoalAssignment> {
     );
   }
 
-  // Future<void> _addGoal() async {
-  //   final managersProvider = Provider.of<ManagersProvider>(context, listen: false);
-  //   final goalsProvider = Provider.of<GoalsProvider>(context, listen: false);
-  //
-  //   // Check if the selected manager is not null and the description is not empty
-  //   if (selectedManager != null && descripController.text.isNotEmpty) {
-  //     final selectedManagerData = managersProvider.managers.firstWhere(
-  //             (manager) => manager.uid == selectedManager,
-  //         orElse: () => Manager(uid: '', name: '', email: '', phone: '', departmentName: '', managerNumber: '', role: '', status: '')
-  //     );
-  //
-  //     // Create a new Goal object
-  //     Goal newGoal = Goal(
-  //       id: DateTime.now().millisecondsSinceEpoch.toString(), // Unique ID
-  //       mdId: FirebaseAuth.instance.currentUser!.uid, // Replace with the actual MD ID
-  //       managerId: selectedManager!,
-  //       managerName: selectedManagerData.name,
-  //       managerNumber: selectedManagerData.managerNumber,
-  //       departmentName: selectedManagerData.departmentName,
-  //       description: descripController.text,
-  //       dateTime: DateTime.now(), // Current date and time
-  //     );
-  //
-  //     try {
-  //       await goalsProvider.addGoal(newGoal);
-  //       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Goal added successfully!')));
-  //     } catch (e) {
-  //       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to add goal: $e')));
-  //     }
-  //   } else {
-  //     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please select a manager and enter a description.')));
-  //   }
-  // }
-
-
   Future<void> _addGoal() async {
     final managersProvider = Provider.of<ManagersProvider>(context, listen: false);
     final goalsProvider = Provider.of<GoalsProvider>(context, listen: false);
@@ -170,7 +134,10 @@ class _GoalAssignmentState extends State<GoalAssignment> {
       try {
         // Add the goal using the GoalsProvider
         await goalsProvider.addGoal(newGoal);
+        descripController.clear(); // Clear the text field
+        selectedManager = null; // Reset selected manager if necessary
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Goal added successfully!')));
+
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to add goal: $e')));
       }

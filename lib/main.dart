@@ -4,11 +4,16 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:human_capital_management/Front%20side/Loginpage.dart';
 import 'package:human_capital_management/Front%20side/adddepartments.dart';
 import 'package:human_capital_management/Front%20side/superadminpanel.dart';
+import 'Front side/Attendance.dart';
+import 'Front side/EmployeeGoals.dart';
+import 'Front side/allcompletedgoalsbyemployee.dart';
 import 'Front side/dashBoard.dart';
 import 'Front side/employeedashboard.dart';
+import 'Front side/employeprofile.dart';
 import 'Front side/goalassignment.dart';
 import 'Front side/goalsbyManager.dart';
 import 'Front side/managerDashboard.dart';
+import 'Front side/managerprofile.dart';
 import 'Front side/total_departs.dart';
 import 'Front side/totalempbymanager.dart';
 import 'Front side/totalgoalspage.dart';
@@ -67,6 +72,16 @@ class MyApp extends StatelessWidget {
           '/employeepage': (context) => const EmployeeDashBoard(),
           '/goalsbymanager':(context)=> const Goalsbymanager(),
           '/employeesbymanager':(context)=> const TotalEmpBasedOnManager(),
+          '/goalsbyemployee':(context)=> const EmployeeGoals(),
+          '/attendancebyemployee': (context) => AttendanceScreen(
+            userId: ModalRoute.of(context)!.settings.arguments as String,
+          ),
+          '/employeeprofile':(context)=> const EmployeeProfile(),
+          '/allcompletedgoals':(context)=> const CompletedGoals(),
+          '/managerprofile':(context)=> const ManagerProfile(),
+
+
+
 
         },
         title: 'HCM-Human Capital Management',
@@ -103,7 +118,7 @@ class AuthGate extends StatelessWidget {
                   if (userRole == 'MD') {
                     // Navigate to MD Page
                     WidgetsBinding.instance!.addPostFrameCallback((_) {
-                      Navigator.pushReplacementNamed(context, '/mdPage');
+                      Navigator.pushReplacementNamed(context, '/frontPage');
                     });
                   } else if (userRole == 'Manager') {
                     // Navigate to Manager Page
@@ -113,7 +128,7 @@ class AuthGate extends StatelessWidget {
                   } else if (userRole == 'Employee') {
                     // Navigate to Employee Page
                     WidgetsBinding.instance.addPostFrameCallback((_) {
-                      Navigator.pushReplacementNamed(context, '/employeePage');
+                      Navigator.pushReplacementNamed(context, '/employeepage');
                     });
                   } else {
                     // If role is null, go to login page

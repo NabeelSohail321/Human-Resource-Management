@@ -36,6 +36,7 @@ class GoalsProvider with ChangeNotifier {
     }
   }
 
+
   Future<void> fetchEmployeeGoals(String uid, BuildContext context) async {
     _employeeGoals.clear();
 
@@ -45,10 +46,11 @@ class GoalsProvider with ChangeNotifier {
           .equalTo(uid)
           .onValue
           .listen((event) {
-        final employeeGoalsData = event.snapshot.value as Map<dynamic, dynamic>;
-        if (employeeGoalsData.isNotEmpty && employeeGoalsData != null) {
+        final employeeGoalsData = event.snapshot.value as Map<dynamic, dynamic>?;
+
+        if (employeeGoalsData != null && employeeGoalsData.isNotEmpty) {
           _employeeGoals = employeeGoalsData.values.toList();
-          notifyListeners();
+          notifyListeners(); // Notify listeners after updating goals
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('No Goals Assigned to Employee')));
@@ -58,6 +60,7 @@ class GoalsProvider with ChangeNotifier {
       print('Error fetching goals: $e');
     }
   }
+
 
   void fetchGoals() async {
     try {
@@ -145,4 +148,73 @@ class GoalsProvider with ChangeNotifier {
       print('Failed to assign goal to employee: $e');
     }
   }
+
+
+  Future<void> markGoalAsComplete(String goalId) async {
+    try {
+      // Get the current date and time
+      String completionDateTime = DateTime.now().toIso8601String(); // Format the date/time in ISO 8601 format
+
+      // Update the 'isCompleted' field and 'completionDateTime' in the database for the specified goal
+      await _databaseReference.child(goalId).update({
+        'isCompleted': true,
+        'completionDateTime': completionDateTime, // New field to hold the completion date and time
+      });
+
+      // Optionally, update the local list to reflect the change
+      for (var goal in _employeeGoals) {
+        if (goal['goalId'] == goalId) { // Use the correct field name
+          goal['isCompleted'] = true; // Update the local state
+          goal['completionDateTime'] = completionDateTime; // Update local completion date and time
+          break;
+        }
+      }
+      notifyListeners(); // Notify listeners to rebuild the UI
+    } catch (e) {
+      print('Error marking goal as complete: $e');
+    }
+  }
+
+  Future<void> fetchCompletedGoals(BuildContext context) async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+
+    if (currentUser != null) {
+      await fetchEmployeeGoals(currentUser.uid, context); // Fetch goals for the current user
+
+      // Filter completed goals
+      _employeeGoals = _employeeGoals.where((goal) =>
+      goal['assignedEmployeeId'] == currentUser.uid && goal['isCompleted'] == true).toList();
+
+      notifyListeners(); // Notify listeners to update the UI
+    } else {
+      print('No user is logged in.');
+    }
+  }
+
+  Future<List<Goal>> fetchGoalsForCurrentEmployee() async {
+    final user = FirebaseAuth.instance.currentUser; // Get the current user
+    if (user != null) {
+      final DatabaseReference goalsRef = FirebaseDatabase.instance.ref('Goals');
+
+      // Retrieve the data event
+      final DatabaseEvent event = await goalsRef.once();
+      final DataSnapshot snapshot = event.snapshot; // Get the DataSnapshot from the event
+
+      List<Goal> goals = [];
+      if (snapshot.exists) {
+        final goalsMap = snapshot.value as Map<dynamic, dynamic>;
+
+        goalsMap.forEach((key, value) {
+          // Use the fromJson factory method to create Goal objects
+          final goal = Goal.fromJson(Map<String, dynamic>.from(value), key);
+          if (goal.assignedEmployeeId == user.uid) { // Filter by current employee ID
+            goals.add(goal);
+          }
+        });
+      }
+      return goals;
+    }
+    return []; // Return an empty list if no user is logged in
+  }
+
 }
