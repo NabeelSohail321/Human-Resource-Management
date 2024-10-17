@@ -1,1 +1,39 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"human-resource-managemen-c24ac","appId":"1:660204097674:android:39965da04a2a2ca2401d73","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"human-resource-managemen-c24ac","configurations":{"android":"1:660204097674:android:39965da04a2a2ca2401d73","ios":"1:660204097674:ios:abfd935cf3a6e7fe401d73","macos":"1:660204097674:ios:abfd935cf3a6e7fe401d73","web":"1:660204097674:web:0b2d8b8169bb49f9401d73","windows":"1:660204097674:web:1e179f5d7209e92a401d73"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "human-resource-managemen-c24ac",
+          "appId": "1:660204097674:android:39965da04a2a2ca2401d73",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "human-resource-managemen-c24ac",
+          "configurations": {
+            "android": "1:660204097674:android:39965da04a2a2ca2401d73",
+            "ios": "1:660204097674:ios:abfd935cf3a6e7fe401d73",
+            "macos": "1:660204097674:ios:abfd935cf3a6e7fe401d73",
+            "web": "1:660204097674:web:0b2d8b8169bb49f9401d73",
+            "windows": "1:660204097674:web:1e179f5d7209e92a401d73"
+          }
+        }
+      }
+    }
+  },
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}
