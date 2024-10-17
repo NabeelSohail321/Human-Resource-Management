@@ -49,4 +49,32 @@ class RestrictedUsersProvider with ChangeNotifier {
       notifyListeners();
     });
   }
+
+  Future<void> moveUserBack(String userId) async {
+    try {
+      // Retrieve the user data from the RestrictedUsers node
+      DataSnapshot snapshot = await _databaseReference.child(userId).get();
+
+      if (snapshot.exists) {
+        // Get the user data
+        final userData = snapshot.value as Map<dynamic, dynamic>;
+
+        // Move the user back to the Managers node with updated status
+        await _databaseReference.child(userId).remove(); // Remove from RestrictedUsers
+        await FirebaseDatabase.instance.ref().child('Manager').child(userId).set({
+          ...userData, // Spread the existing user data
+          'user status': 'Active', // Set the status to Active
+        });
+      }
+
+      // Refresh the restricted users
+      fetchRestrictedUsers();
+    } catch (error) {
+      // Handle errors accordingly
+      _errorMessage = 'Failed to move user back: ${error.toString()}';
+      notifyListeners();
+    }
+  }
+
+
 }

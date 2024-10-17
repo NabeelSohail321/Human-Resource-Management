@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../Providers/goalprovider.dart';
+import '../components.dart';
 
 class TotalGoalsPage extends StatefulWidget {
   const TotalGoalsPage({super.key});
@@ -20,9 +21,8 @@ class _TotalGoalsPageState extends State<TotalGoalsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Total Goals"),
-      ),
+      appBar: CustomAppBar.customAppBar("Total Assigned Goals"),
+
       body: Consumer<GoalsProvider>(
         builder: (context, goalsProvider, child) {
           final goals = goalsProvider.goals;
@@ -42,7 +42,15 @@ class _TotalGoalsPageState extends State<TotalGoalsPage> {
                     children: [
                       Text("Description: ${goal.description}"),
                       Text("Manager: ${goal.managerName} (${goal.managerNumber})"),
-                      Text("Date: ${goal.dateTime.toLocal().toIso8601String()}"), // Displaying date in local format
+                      Text("Date: ${goal.dateTime.toLocal().toIso8601String()}"),// Displaying date in local format
+                      if (goal.completionDateTime != null) // Show completion date if available
+                        Text(
+                          "Completed On: ${goal.completionDateTime}",
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green,
+                          ),
+                        ),
                     ],
                   ),
                 ),
@@ -55,7 +63,7 @@ class _TotalGoalsPageState extends State<TotalGoalsPage> {
           onPressed: (){
             Navigator.pushNamed(context, '/goalassignments');
           },
-        child: Icon(Icons.add,color: Colors.teal,),
+        child: const Icon(Icons.add,color: Colors.teal,),
       ),
     );
   }

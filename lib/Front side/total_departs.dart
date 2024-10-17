@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../Providers/userprovider.dart'; // Adjust the import based on your file structure
+import '../Providers/userprovider.dart';
+import '../components.dart'; // Adjust the import based on your file structure
 
 class DepartmentListPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Departments'),
-      ),
+      appBar: CustomAppBar.customAppBar("Total Departments"),
       body: FutureBuilder(
         future: Provider.of<UserProvider>(context, listen: false).fetchtotalDepartments(),
         builder: (context, snapshot) {

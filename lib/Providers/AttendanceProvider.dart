@@ -149,7 +149,7 @@ class AttendanceProvider with ChangeNotifier, WidgetsBindingObserver {
     final dateKey = '${now.year}-${now.month}-${now.day}'; // Use formatted date as key
     String checkOutTime = DateTime.now().toIso8601String();
 
-    _attendanceRef.child(dateKey).child(userId).child('checkOut').set({
+     _attendanceRef.child(dateKey).child(userId).child('checkOut').set({
       'time': checkOutTime,
     });
 

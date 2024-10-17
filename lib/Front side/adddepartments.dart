@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../Providers/userprovider.dart'; // Adjust the import based on your file structure
+import '../Providers/userprovider.dart';
+import '../components.dart'; // Adjust the import based on your file structure
 
 class AddDepartmentPage extends StatefulWidget {
   @override
@@ -13,9 +14,8 @@ class _AddDepartmentPageState extends State<AddDepartmentPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Add Department"),
-      ),
+      appBar: CustomAppBar.customAppBar("Add Departments"),
+
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

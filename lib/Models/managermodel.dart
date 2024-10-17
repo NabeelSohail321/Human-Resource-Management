@@ -7,6 +7,7 @@ class Manager {
   final String managerNumber;
   final String role;
   final String status;
+  String? workLocation; // Add workLocation as a nullable property
 
   Manager({
     required this.uid,
@@ -17,6 +18,8 @@ class Manager {
     required this.managerNumber,
     required this.role,
     required this.status,
+    this.workLocation, // Make it optional
+
   });
 }
 

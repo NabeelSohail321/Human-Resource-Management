@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../Models/goalmodels.dart';
 import '../Providers/employeeprovider.dart';
 import '../Providers/goalprovider.dart';
+import '../components.dart';
 
 class Goalsbymanager extends StatefulWidget {
   const Goalsbymanager({super.key});
@@ -13,6 +14,7 @@ class Goalsbymanager extends StatefulWidget {
 }
 
 class _GoalsbymanagerState extends State<Goalsbymanager> {
+
   @override
   void initState() {
     super.initState();
@@ -89,9 +91,8 @@ class _GoalsbymanagerState extends State<Goalsbymanager> {
     final goals = goalsProvider.goals;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Goals for Current Manager"),
-      ),
+      appBar: CustomAppBar.customAppBar("Goals for Manager"),
+
       body: goals.isEmpty
           ? const Center(child: Text("No goals found."))
           : ListView.builder(

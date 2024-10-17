@@ -5,20 +5,28 @@ import 'package:flutter/scheduler.dart'; // Import SchedulerBinding
 import '../Models/goalmodels.dart';
 
 class GoalsProvider with ChangeNotifier {
-  final DatabaseReference _databaseReference =
-  FirebaseDatabase.instance.ref().child('Goals'); // Reference to the Goals node
+  final DatabaseReference _databaseReference = FirebaseDatabase.instance
+      .ref()
+      .child('Goals'); // Reference to the Goals node
   List<Goal> _goals = [];
+  List<dynamic> _employeeGoals = [];
+
+  List<dynamic> get employyeGoals => _employeeGoals;
+
   List<Goal> get goals => _goals;
   String? currentManagerId; // Change to nullable
   int get totalGoalsCount => _goals.length;
 
   Future<void> addGoal(Goal newGoal) async {
-    final DatabaseReference goalsRef = FirebaseDatabase.instance.ref().child('Goals');
+    final DatabaseReference goalsRef =
+        FirebaseDatabase.instance.ref().child('Goals');
 
     try {
       // Generate a unique key using push()
-      final newGoalRef = goalsRef.push(); // This generates a unique ID for the new goal
-      newGoal.id = newGoalRef.key!; // Set the generated ID to the goal's id property
+      final newGoalRef =
+          goalsRef.push(); // This generates a unique ID for the new goal
+      newGoal.id =
+          newGoalRef.key!; // Set the generated ID to the goal's id property
 
       // Save the goal using the generated ID
       await newGoalRef.set(newGoal.toJson());
@@ -27,6 +35,32 @@ class GoalsProvider with ChangeNotifier {
       throw Exception('Failed to add goal: $e');
     }
   }
+
+
+  Future<void> fetchEmployeeGoals(String uid, BuildContext context) async {
+    _employeeGoals.clear();
+
+    try {
+      await _databaseReference
+          .orderByChild('assignedEmployeeId')
+          .equalTo(uid)
+          .onValue
+          .listen((event) {
+        final employeeGoalsData = event.snapshot.value as Map<dynamic, dynamic>?;
+
+        if (employeeGoalsData != null && employeeGoalsData.isNotEmpty) {
+          _employeeGoals = employeeGoalsData.values.toList();
+          notifyListeners(); // Notify listeners after updating goals
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('No Goals Assigned to Employee')));
+        }
+      });
+    } catch (e) {
+      print('Error fetching goals: $e');
+    }
+  }
+
 
   void fetchGoals() async {
     try {
@@ -53,14 +87,14 @@ class GoalsProvider with ChangeNotifier {
     }
   }
 
-
   // Method to fetch the current user's manager ID
   Future<void> fetchCurrentUserId() async {
     final user = FirebaseAuth.instance.currentUser; // Get current user
 
     if (user != null) {
       // Here you would normally fetch user details from your database
-      currentManagerId = user.uid; // Example: Replace this with your logic to fetch managerId
+      currentManagerId =
+          user.uid; // Example: Replace this with your logic to fetch managerId
 
       // Log the fetched current manager ID
       print("Current Manager ID: $currentManagerId");
@@ -72,7 +106,8 @@ class GoalsProvider with ChangeNotifier {
   }
 
   Future<void> fetchGoalsbymanager() async {
-    if (currentManagerId == null) return; // Do not proceed if no manager ID is available
+    if (currentManagerId == null)
+      return; // Do not proceed if no manager ID is available
 
     print("Fetching goals for manager ID: $currentManagerId"); // Debug log
 
@@ -105,12 +140,81 @@ class GoalsProvider with ChangeNotifier {
     try {
       // Update the goal in the database with the selected employee's UID
       await _databaseReference.child(goal.id).update({
-        'assignedEmployeeId': employeeUid, // Add a field to hold the assigned employee's UID
+        'assignedEmployeeId': employeeUid,
+        // Add a field to hold the assigned employee's UID
       });
       notifyListeners(); // Notify listeners that the goal has been updated
     } catch (e) {
       print('Failed to assign goal to employee: $e');
     }
+  }
+
+
+  Future<void> markGoalAsComplete(String goalId) async {
+    try {
+      // Get the current date and time
+      String completionDateTime = DateTime.now().toIso8601String(); // Format the date/time in ISO 8601 format
+
+      // Update the 'isCompleted' field and 'completionDateTime' in the database for the specified goal
+      await _databaseReference.child(goalId).update({
+        'isCompleted': true,
+        'completionDateTime': completionDateTime, // New field to hold the completion date and time
+      });
+
+      // Optionally, update the local list to reflect the change
+      for (var goal in _employeeGoals) {
+        if (goal['goalId'] == goalId) { // Use the correct field name
+          goal['isCompleted'] = true; // Update the local state
+          goal['completionDateTime'] = completionDateTime; // Update local completion date and time
+          break;
+        }
+      }
+      notifyListeners(); // Notify listeners to rebuild the UI
+    } catch (e) {
+      print('Error marking goal as complete: $e');
+    }
+  }
+
+  Future<void> fetchCompletedGoals(BuildContext context) async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+
+    if (currentUser != null) {
+      await fetchEmployeeGoals(currentUser.uid, context); // Fetch goals for the current user
+
+      // Filter completed goals
+      _employeeGoals = _employeeGoals.where((goal) =>
+      goal['assignedEmployeeId'] == currentUser.uid && goal['isCompleted'] == true).toList();
+
+      notifyListeners(); // Notify listeners to update the UI
+    } else {
+      print('No user is logged in.');
+    }
+  }
+
+  Future<List<Goal>> fetchGoalsForCurrentEmployee() async {
+    final user = FirebaseAuth.instance.currentUser; // Get the current user
+    if (user != null) {
+      final DatabaseReference goalsRef = FirebaseDatabase.instance.ref('Goals');
+
+      // Retrieve the data event
+      final DatabaseEvent event = await goalsRef.once();
+      final DataSnapshot snapshot = event.snapshot; // Get the DataSnapshot from the event
+
+      List<Goal> goals = [];
+      if (snapshot.exists) {
+        final goalsMap = snapshot.value as Map<dynamic, dynamic>;
+
+        goalsMap.forEach((key, value) {
+          // Use the fromJson factory method to create Goal objects
+          final goal = Goal.fromJson(Map<String, dynamic>.from(value), key);
+          if (goal.assignedEmployeeId == user.uid) { // Filter by current employee ID
+            goals.add(goal);
+          }
+        });
+      }
+      return goals;
+    }
+    return []; // Return an empty list if no user is logged in
   }
 
 }

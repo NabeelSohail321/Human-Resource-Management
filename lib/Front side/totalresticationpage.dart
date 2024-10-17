@@ -20,6 +20,28 @@ class _ResticatedListPageState extends State<ResticatedListPage> {
     });
   }
 
+  void _moveManagerBack(String userId) {
+    final restrictedUsersProvider = Provider.of<RestrictedUsersProvider>(context, listen: false);
+
+    // Call the provider method to move the manager back
+    restrictedUsersProvider.moveUserBack(userId).then((_) {
+      // Optionally show a success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Manager moved back and status updated to Active!")),
+      );
+
+      // Refresh the list of restricted users
+      restrictedUsersProvider.fetchRestrictedUsers();
+    }).catchError((error) {
+      // Handle errors
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to move manager back: $error")),
+      );
+    });
+  }
+
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -53,6 +75,12 @@ class _ResticatedListPageState extends State<ResticatedListPage> {
                     Text("Phone Number: ${user.phone}"),
                     Text("Role Number: ${user.role}"),
                   ],
+                ),
+                trailing: ElevatedButton(
+                  onPressed: () {
+                    _moveManagerBack(user.uid); // Call method to move manager back
+                  },
+                  child: const Text('Move Back'),
                 ),
               );
             },

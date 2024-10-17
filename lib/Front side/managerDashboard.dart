@@ -4,6 +4,7 @@ import 'package:human_capital_management/Providers/managerprovider.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:intl/intl.dart';
+import '../Providers/employeeprovider.dart';
 import '../Providers/goalprovider.dart';
 import '../Providers/usermodel.dart';
 import 'drawerfile.dart';
@@ -21,7 +22,7 @@ class _HRDashboardState extends State<HRDashboard> with SingleTickerProviderStat
   bool isDrawerOpen = false;
   User? user; // Store the user information
   DateTimeRange selectedDateRange = DateTimeRange(
-    start: DateTime.now().subtract(Duration(days: 30)),
+    start: DateTime.now().subtract(const Duration(days: 30)),
     end: DateTime.now(),
   );
 
@@ -76,6 +77,21 @@ class _HRDashboardState extends State<HRDashboard> with SingleTickerProviderStat
     final goalsProvider = Provider.of<GoalsProvider>(context, listen: false);
     goalsProvider.initialize(); // Ensure this is called to fetch goals
 
+
+    // Fetch the current manager's department
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final managerProvider = Provider.of<ManagersProvider>(context, listen: false);
+      await managerProvider.fetchManagers(); // Fetch managers
+
+      final currentManager = managerProvider.currentManager;
+      if (currentManager != null) {
+        // Call the fetchTotalEmployeeCount method with the current manager's department
+        final employeeProvider = Provider.of<EmployeeProvider>(context, listen: false);
+        await employeeProvider.fetchTotalEmployeeCount(currentManager.departmentName);
+      }
+    });
+
+
   }
 
   void _scrollListener() {
@@ -95,14 +111,14 @@ class _HRDashboardState extends State<HRDashboard> with SingleTickerProviderStat
       // Scroll to the top of the GridView
       _scrollController.animateTo(
         0,
-        duration: Duration(seconds: 1),
+        duration: const Duration(seconds: 1),
         curve: Curves.easeInOut,
       );
     } else {
       // Scroll to the bottom of the GridView
       _scrollController.animateTo(
         _scrollController.position.maxScrollExtent,
-        duration: Duration(seconds: 1),
+        duration: const Duration(seconds: 1),
         curve: Curves.easeInOut,
       );
     }
@@ -126,6 +142,7 @@ class _HRDashboardState extends State<HRDashboard> with SingleTickerProviderStat
     final managerProvider = Provider.of<ManagersProvider>(context);
     final currentManager = managerProvider.currentManager;
     final goalsProvider = Provider.of<GoalsProvider>(context);
+    final empProvider = Provider.of<EmployeeProvider>(context);
 
     final screenSize = MediaQuery.of(context).size;
 
@@ -168,15 +185,15 @@ class _HRDashboardState extends State<HRDashboard> with SingleTickerProviderStat
                                   }
                                 },
                                 child: Container(
-                                  padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+                                  padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
                                   decoration: BoxDecoration(
                                     border: Border.all(color: Colors.grey),
                                     borderRadius: BorderRadius.circular(8.0),
                                   ),
                                   child: Row(
                                     children: [
-                                      Icon(Icons.calendar_today),
-                                      SizedBox(width: 8),
+                                      const Icon(Icons.calendar_today),
+                                      const SizedBox(width: 8),
                                       Text(
                                         '${DateFormat('MM/dd/yyyy').format(selectedDateRange.start)} - ${DateFormat('MM/dd/yyyy').format(selectedDateRange.end)}',
                                       ),
@@ -185,7 +202,7 @@ class _HRDashboardState extends State<HRDashboard> with SingleTickerProviderStat
                                 ),
                               ),
                             ),
-                            SizedBox(width: 16),
+                            const SizedBox(width: 16),
                             Expanded(
                               child: currentManager != null // Check if currentManager is not null
                                   ? DropdownButtonFormField<String>(
@@ -202,19 +219,19 @@ class _HRDashboardState extends State<HRDashboard> with SingleTickerProviderStat
                                     child: Text(currentManager.departmentName),
                                   ),
                                 ],
-                                decoration: InputDecoration(
+                                decoration: const InputDecoration(
                                   border: OutlineInputBorder(),
                                   labelText: "Department",
                                 ),
                               )
                                   : Container( // Display a placeholder or empty widget when the manager is not available
-                                padding: EdgeInsets.symmetric(vertical: 8.0),
-                                child: Text("Loading..."), // Indicate loading state or show nothing
+                                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                child: const Text("Loading..."), // Indicate loading state or show nothing
                               ),
                             ),
                           ],
                         ),
-                        SizedBox(height: 16),
+                        const SizedBox(height: 16),
 
                         // Metrics Grid - Responsive based on screen size
                         Expanded(
@@ -232,10 +249,14 @@ class _HRDashboardState extends State<HRDashboard> with SingleTickerProviderStat
                                     print("Employee Days Absent tapped!");
                                     // You could navigate to a detailed page or show a modal with more information.
                                   }),
-                                  buildMetricTile("Total Employees", "28", () {
+                                  buildMetricTile("Total Employees", "${empProvider.totalEmployeeCount}", () {
+                                    Navigator.pushNamed(context, ('/employeesbymanager'));
+
                                     print("Total Employees tapped!");
                                   }),
-                                  buildMetricTile("Pre-approved Absences", "188", () {
+                                  buildMetricTile("Manager Profile", "", () {
+                                    Navigator.pushNamed(context, ('/managerprofile'));
+
                                     print("Pre-approved Absences tapped!");
                                   }),
                                   buildMetricTile("Overtime Hours", "156", () {
@@ -289,7 +310,7 @@ class _HRDashboardState extends State<HRDashboard> with SingleTickerProviderStat
                                       dataSource: getWorkLocationData(),
                                       xValueMapper: (WorkLocationData data, _) => data.location,
                                       yValueMapper: (WorkLocationData data, _) => data.percentage,
-                                      dataLabelSettings: DataLabelSettings(isVisible: true),
+                                      dataLabelSettings: const DataLabelSettings(isVisible: true),
                                     )
                                   ],
                                 ),
@@ -320,7 +341,7 @@ class _HRDashboardState extends State<HRDashboard> with SingleTickerProviderStat
                                       dataSource: getWorkLocationData(),
                                       xValueMapper: (WorkLocationData data, _) => data.location,
                                       yValueMapper: (WorkLocationData data, _) => data.percentage,
-                                      dataLabelSettings: DataLabelSettings(isVisible: true),
+                                      dataLabelSettings: const DataLabelSettings(isVisible: true),
                                     )
                                   ],
                                 ),
@@ -351,7 +372,7 @@ class _HRDashboardState extends State<HRDashboard> with SingleTickerProviderStat
             position: _slideAnimation,
             child: Container(
               width: screenSize.width * 0.18, // Adjust width of the drawer (80% of the screen)
-              child:  Drawerfrontside(), // Your custom drawer widget
+              child:  const Drawerfrontside(), // Your custom drawer widget
             ),
           ),
 
@@ -364,7 +385,7 @@ class _HRDashboardState extends State<HRDashboard> with SingleTickerProviderStat
     return GestureDetector(
       onTap: onPress,
       child: Container(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12.0),
           color: Colors.grey[200],
@@ -373,8 +394,8 @@ class _HRDashboardState extends State<HRDashboard> with SingleTickerProviderStat
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            Text(value, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
           ],
         ),
       ),
