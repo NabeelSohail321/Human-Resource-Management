@@ -17,6 +17,7 @@ class GoalsBarChart extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 300,
+      width: 500,
       padding: const EdgeInsets.all(16.0),
       child: SfCartesianChart(
         title: ChartTitle(text: 'Goals Overview'),

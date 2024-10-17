@@ -51,6 +51,22 @@ class _TotalGoalsPageState extends State<TotalGoalsPage> {
                             color: Colors.green,
                           ),
                         ),
+                      Text("Rating: ${goal.rating}",style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold
+                      ),),
+                      Text("Feedback: ${goal.feedback}",style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold
+                      ),),
+                      if(goal.isCompleted==true)
+                        Text("Completed by employee: ${goal.assignedEmployeeId}"),
+                      if(goal.status == 'Rejected')
+                        Text("Goal was regected by manager and reason is ${goal.rejectionReason}",style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          color: Colors.red
+                        ),)
                     ],
                   ),
                 ),
@@ -67,4 +83,7 @@ class _TotalGoalsPageState extends State<TotalGoalsPage> {
       ),
     );
   }
+
+
+
 }

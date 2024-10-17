@@ -11,6 +11,11 @@ class Goal {
   String? assignedEmployeeId; // New property to track the assigned employee ID
   bool isCompleted; // This field indicates if the goal is completed
   String? completionDateTime; // Nullable to accommodate not completed goals
+  String? status; // Status of the goal (e.g., "Rejected")
+  double rating; // Add the rating field
+  String feedback; // Add this property
+  String? rejectionReason; // Add this line
+
 
 
   Goal({
@@ -25,6 +30,11 @@ class Goal {
     this.assignedEmployeeId, // Optional parameter
     this.isCompleted = false, // Default value
     this.completionDateTime,
+    this.status, // Initialize status
+    this.rating = 0.0, // Initialize rating to 0.0 by default
+    this.feedback = '', // Initialize with an empty string
+    this.rejectionReason, // Include in the constructor
+
 
 
   });
@@ -42,6 +52,10 @@ class Goal {
       'assignedEmployeeId': assignedEmployeeId, // Include in JSON
       'isCompleted': isCompleted, // Include this field in toJson
       'completionDateTime': completionDateTime, // Include this field in toJson
+      'status': status, // Include status in toJson
+      'rating': rating, // Include rating in the JSON
+      'feedback': feedback, // Include feedback in the JSON object
+      'rejectionReason': rejectionReason, // Include feedback in the JSON object
 
 
     };
@@ -61,8 +75,10 @@ class Goal {
       assignedEmployeeId: json['assignedEmployeeId'], // Handle assigned employee ID
       isCompleted: json['isCompleted'] ?? false, // Initialize from JSON
       completionDateTime: json['completionDateTime'] ?? '',
-
-
+      status: json['status'], // Include status in the fromJson method
+      rating: (json['rating'] as num?)?.toDouble() ?? 0.0, // Parse rating from JSON
+      feedback: json['feedback'] ?? '', // Ensure feedback is retrieved
+      rejectionReason: json['rejectionReason'] ?? '', // Ensure feedback is retrieved
 
     );
   }

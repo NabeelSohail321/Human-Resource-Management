@@ -2,6 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 
+import '../Front side/managerDashboard.dart';
+
 class Employee {
   final String uid;
   final String name;
@@ -22,6 +24,7 @@ class EmployeeProvider with ChangeNotifier {
   List<Employee> _employees = [];
   List<Employee> get employees => _employees;
   int get totalEmployeeCount => employees.length;
+  List<WorkLocationData> workLocationCounts = [];
 
   Future<void> fetchEmployeesByDepartment(String departmentName) async {
     _employees.clear(); // Clear previous employees
@@ -89,8 +92,6 @@ class EmployeeProvider with ChangeNotifier {
     notifyListeners(); // Notify listeners that employee data has been updated
   }
 
-
-
   Map<String, dynamic>? _employeeData;
 
   Map<String, dynamic>? get employeeData => _employeeData;
@@ -116,6 +117,56 @@ class EmployeeProvider with ChangeNotifier {
       print('Error updating employee profile: $e');
     }
   }
+
+
+  Future<void> fetchWorkLocations() async {
+    try {
+      // Use the ref() method to get a reference to the Employee node
+      final DatabaseReference ref = FirebaseDatabase.instance.ref('Employee');
+      DatabaseEvent event = await ref.once(); // Use once() to listen for a single event
+
+      // Initialize the counts for work locations
+      Map<String, int> locationCount = {
+        'Work from Home': 0,
+        'Work from Office': 0,
+      };
+
+      // Check if the data is not null
+      if (event.snapshot.exists) {
+        // Get the employee data from the snapshot
+        Map<dynamic, dynamic> employees = event.snapshot.value as Map<dynamic, dynamic>;
+
+        employees.forEach((key, value) {
+          // Check work location and increment counts
+          if (value['workLocation'] == 'Work from Home') {
+            locationCount['Work from Home'] = locationCount['Work from Home']! + 1;
+          } else if (value['workLocation'] == 'Work from Office') {
+            locationCount['Work from Office'] = locationCount['Work from Office']! + 1;
+          }
+        });
+
+        // Calculate the percentages based on the total number of employees
+        int totalEmployees = locationCount['Work from Home']! + locationCount['Work from Office']!;
+        if (totalEmployees > 0) {
+          workLocationCounts = [
+            WorkLocationData('Work from Home', (locationCount['Work from Home']! * 100) / totalEmployees),
+            WorkLocationData('Work from Office', (locationCount['Work from Office']! * 100) / totalEmployees),
+          ];
+        } else {
+          workLocationCounts = [
+            WorkLocationData('Work from Home', 0),
+            WorkLocationData('Work from Office', 0),
+          ];
+        }
+
+        notifyListeners(); // Notify listeners to update the UI
+      }
+    } catch (error) {
+      print("Error fetching work locations: $error");
+    }
+  }
+
+
 
 
 }

@@ -6,7 +6,7 @@ import '../Models/goalmodels.dart';
 import '../Providers/goalprovider.dart';
 import '../Providers/usermodel.dart';
 import 'drawerfile.dart';
-import 'graph.dart'; // Import Syncfusion Charts
+import 'graph.dart';
 
 class EmployeeDashBoard extends StatefulWidget {
   const EmployeeDashBoard({super.key});
@@ -167,75 +167,6 @@ class _EmployeeDashBoardState extends State<EmployeeDashBoard> with SingleTicker
     );
   }
 
-  // @override
-  // Widget build(BuildContext context) {
-  //   final screenSize = MediaQuery.of(context).size; // Get screen size dynamically
-  //   List<GoalData> chartData = [
-  //     GoalData("Total Goals", _goalsData.length),
-  //     GoalData("Completed Goals", _goalsData.where((goal) => goal.isCompleted).length),
-  //   ];
-  //   return user!=null? Scaffold(
-  //     key: _scaffoldKey,
-  //     appBar: AppBar(
-  //       leading: IconButton(
-  //         icon: const Icon(Icons.menu),
-  //         onPressed: toggleDrawer,
-  //       ),
-  //       title: const Text("Employee Dash Board",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 30),),
-  //     ),
-  //     body: Stack(
-  //       children: [
-  //         // Animated content that moves to the side when the drawer is open
-  //         SlideTransition(
-  //           position: _contentSlideAnimation,
-  //           child: Center(
-  //             child: Column(
-  //               children: [
-  //                 _buildGridView(screenSize.width),const SizedBox(height: 20),
-  //                 GoalsBarChart(data: chartData),
-  //
-  //               ],
-  //             ),
-  //
-  //             // Pass screen width for responsive grid
-  //             // child: Column(
-  //             //   children: [
-  //             //     // Container(
-  //             //     //   width: screenSize.width*0.2,
-  //             //     //   child: ElevatedButton(onPressed: (){
-  //             //     //     Navigator.push(context, MaterialPageRoute(builder: (context) {
-  //             //     //       return AttendanceScreen(userId: user!.uid,);
-  //             //     //     },));
-  //             //     //   }, child: Text("Attendance")),
-  //             //     // ),
-  //             //     // Container(
-  //             //     //   width: screenSize.width*0.2,
-  //             //     //   child: ElevatedButton(onPressed: (){
-  //             //     //     Navigator.push(context, MaterialPageRoute(builder: (context) {
-  //             //     //       return EmployeeGoals();
-  //             //     //     },));
-  //             //     //   }, child: Text("Goals")),
-  //             //     // ),
-  //             //   ],
-  //             // ),
-  //           ),
-  //         ),
-  //         // Drawer widget that slides in/out
-  //         SlideTransition(
-  //           position: _slideAnimation,
-  //           child: Container(
-  //             width: screenSize.width * 0.18, // Adjust width of the drawer (80% of the screen)
-  //             child:  const Drawerfrontside(), // Your custom drawer widget
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   ):const Scaffold(
-  //     body: Center(child: Text('Login First')),
-  //   );
-  // }
-
-
   @override
   Widget build(BuildContext context) {
     final goalsProvider = Provider.of<GoalsProvider>(context);
@@ -267,7 +198,13 @@ class _EmployeeDashBoardState extends State<EmployeeDashBoard> with SingleTicker
                     child: _buildGridView(screenSize.width),
                   ),
                   const SizedBox(height: 10),
-                  GoalsBarChart(data: chartData),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      GoalsBarChart(data: chartData),
+                    ],
+                  ),
+                  const SizedBox(height: 10), // Add spacing between the charts
                 ],
               ),
             ),

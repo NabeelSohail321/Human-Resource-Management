@@ -61,6 +61,15 @@ class _EmployeeGoalsState extends State<EmployeeGoals> {
                                 color: Colors.green,
                               ),
                             ),
+                          Text("Rating: ${goal['rating']}",style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold
+                          ),),
+                          Text("Feedback: ${goal['feedback']}",style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold
+                          ),),
+
                         ],
                       ),
                       trailing: IconButton(

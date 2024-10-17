@@ -7,6 +7,7 @@ import 'package:human_capital_management/Front%20side/superadminpanel.dart';
 import 'Front side/Attendance.dart';
 import 'Front side/EmployeeGoals.dart';
 import 'Front side/allcompletedgoalsbyemployee.dart';
+import 'Front side/completedgoalsbyemployees.dart';
 import 'Front side/dashBoard.dart';
 import 'Front side/employeedashboard.dart';
 import 'Front side/employeprofile.dart';
@@ -14,6 +15,7 @@ import 'Front side/goalassignment.dart';
 import 'Front side/goalsbyManager.dart';
 import 'Front side/managerDashboard.dart';
 import 'Front side/managerprofile.dart';
+import 'Front side/rejectedgoalsbymanager.dart';
 import 'Front side/total_departs.dart';
 import 'Front side/totalempbymanager.dart';
 import 'Front side/totalgoalspage.dart';
@@ -56,6 +58,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AttendanceProvider()),
         ChangeNotifierProvider(create: (_) => GoalsProvider()),
         ChangeNotifierProvider(create: (_) => EmployeeProvider()),
+
       ],
       child: MaterialApp(
         routes: {
@@ -79,6 +82,9 @@ class MyApp extends StatelessWidget {
           '/employeeprofile':(context)=> const EmployeeProfile(),
           '/allcompletedgoals':(context)=> const CompletedGoals(),
           '/managerprofile':(context)=> const ManagerProfile(),
+          '/completedgoalspageformanager':(context)=> const CompletedGoalsForManager(),
+          '/rejectedgoalsbymanager': (context) => RejectedGoalsPage()
+
 
 
 

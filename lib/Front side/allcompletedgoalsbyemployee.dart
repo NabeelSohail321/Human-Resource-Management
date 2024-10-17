@@ -60,6 +60,14 @@ class _CompletedGoalsState extends State<CompletedGoals> {
                             color: Colors.green,
                           ),
                         ),
+                      Text("Rating: ${goal['rating']}",style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold
+                      ),),
+                      Text("Feedback: ${goal['feedback']}",style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold
+                      ),),
                     ],
                   ),
                 ),

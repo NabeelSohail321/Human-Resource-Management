@@ -25,6 +25,7 @@ class _HRDashboardState extends State<HRDashboard> with SingleTickerProviderStat
     start: DateTime.now().subtract(const Duration(days: 30)),
     end: DateTime.now(),
   );
+  List<WorkLocationData> workLocationData = [];
 
 
   // ScrollController for GridView
@@ -90,9 +91,22 @@ class _HRDashboardState extends State<HRDashboard> with SingleTickerProviderStat
         await employeeProvider.fetchTotalEmployeeCount(currentManager.departmentName);
       }
     });
-
-
+// Fetch work location data after fetching the current user
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await fetchWorkLocationData();
+    });
   }
+
+  Future<void> fetchWorkLocationData() async {
+    final empProvider = Provider.of<EmployeeProvider>(context, listen: false);
+    await empProvider.fetchWorkLocations(); // Fetch work locations from EmployeeProvider
+
+    setState(() {
+      workLocationData = empProvider.workLocationCounts; // Get the updated work location counts
+    });
+  }
+
+
 
   void _scrollListener() {
     if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent) {
@@ -232,7 +246,6 @@ class _HRDashboardState extends State<HRDashboard> with SingleTickerProviderStat
                           ],
                         ),
                         const SizedBox(height: 16),
-
                         // Metrics Grid - Responsive based on screen size
                         Expanded(
                           child: Stack(
@@ -259,21 +272,25 @@ class _HRDashboardState extends State<HRDashboard> with SingleTickerProviderStat
 
                                     print("Pre-approved Absences tapped!");
                                   }),
-                                  buildMetricTile("Overtime Hours", "156", () {
+                                  buildMetricTile("Completed Goals", "", () {
+                                    Navigator.pushNamed(context, ('/completedgoalspageformanager'));
+
                                     print("Overtime Hours tapped!");
                                   }),
-                                  buildMetricTile("Unscheduled Days Leave", "108", () {
+                                  buildMetricTile("Rejected Goals", "", () {
+                                    Navigator.pushNamed(context, ('/rejectedgoalsbymanager'));
+
                                     print("Unscheduled Days Leave tapped!");
                                   }),
-                                  buildMetricTile("Employee Days Present", "1248", () {
-                                    print("Employee Days Present tapped!");
-                                  }),
-                                  buildMetricTile("Sick Leave vs. Casual Leave", "78 / 76", () {
-                                    print("Sick Leave vs. Casual Leave tapped!");
-                                  }),
-                                  buildMetricTile("Employees on Probation", "8", () {
-                                    print("Employees on Probation tapped!");
-                                  }),
+                                  // buildMetricTile("Employee Days Present", "1248", () {
+                                  //   print("Employee Days Present tapped!");
+                                  // }),
+                                  // buildMetricTile("Sick Leave vs. Casual Leave", "78 / 76", () {
+                                  //   print("Sick Leave vs. Casual Leave tapped!");
+                                  // }),
+                                  // buildMetricTile("Employees on Probation", "8", () {
+                                  //   print("Employees on Probation tapped!");
+                                  // }),
                                 ],
                               ),
                               // Floating Action Button
@@ -301,20 +318,22 @@ class _HRDashboardState extends State<HRDashboard> with SingleTickerProviderStat
                           child: isMobile
                               ? Column( // For mobile, display charts vertically
                             children: [
+
                               Expanded(
                                 child: SfCircularChart(
                                   title: ChartTitle(text: 'Employee Work Location Breakdown'),
                                   legend: Legend(isVisible: true, position: LegendPosition.bottom),
                                   series: <CircularSeries>[
                                     PieSeries<WorkLocationData, String>(
-                                      dataSource: getWorkLocationData(),
+                                      dataSource: workLocationData, // Use the fetched work location data
                                       xValueMapper: (WorkLocationData data, _) => data.location,
                                       yValueMapper: (WorkLocationData data, _) => data.percentage,
                                       dataLabelSettings: const DataLabelSettings(isVisible: true),
-                                    )
+                                    ),
                                   ],
                                 ),
                               ),
+
                               Expanded(
                                 child: SfCartesianChart(
                                   title: ChartTitle(text: 'Attendance by Department'),
@@ -332,20 +351,22 @@ class _HRDashboardState extends State<HRDashboard> with SingleTickerProviderStat
                           )
                               : Row( // For larger screens, display charts side by side
                             children: [
+
                               Expanded(
                                 child: SfCircularChart(
                                   title: ChartTitle(text: 'Employee Work Location Breakdown'),
-                                  legend: Legend(isVisible: true, position: LegendPosition.right),
+                                  legend: Legend(isVisible: true, position: LegendPosition.bottom),
                                   series: <CircularSeries>[
                                     PieSeries<WorkLocationData, String>(
-                                      dataSource: getWorkLocationData(),
+                                      dataSource: workLocationData, // Use the fetched work location data
                                       xValueMapper: (WorkLocationData data, _) => data.location,
                                       yValueMapper: (WorkLocationData data, _) => data.percentage,
                                       dataLabelSettings: const DataLabelSettings(isVisible: true),
-                                    )
+                                    ),
                                   ],
                                 ),
                               ),
+
                               Expanded(
                                 child: SfCartesianChart(
                                   title: ChartTitle(text: 'Attendance by Department'),
@@ -403,12 +424,12 @@ class _HRDashboardState extends State<HRDashboard> with SingleTickerProviderStat
   }
 
 
-  List<WorkLocationData> getWorkLocationData() {
-    return [
-      WorkLocationData('Home', 45.43),
-      WorkLocationData('Office', 54.57),
-    ];
-  }
+  // List<WorkLocationData> getWorkLocationData() {
+  //   return [
+  //     WorkLocationData('Home', 45.43),
+  //     WorkLocationData('Office', 54.57),
+  //   ];
+  // }
 
   List<DepartmentAttendanceData> getDepartmentAttendanceData() {
     return [

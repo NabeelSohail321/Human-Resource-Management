@@ -53,7 +53,7 @@ class GoalsProvider with ChangeNotifier {
           notifyListeners(); // Notify listeners after updating goals
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('No Goals Assigned to Employee')));
+              const SnackBar(content: Text('No Goals Assigned to Employee')));
         }
       });
     } catch (e) {
@@ -216,5 +216,93 @@ class GoalsProvider with ChangeNotifier {
     }
     return []; // Return an empty list if no user is logged in
   }
+
+  Future<void> fetchCompletedGoalsForManagerId(String managerId) async {
+    if (managerId.isEmpty) return; // Early return if managerId is empty
+
+    _goals.clear(); // Clear the existing goals list to avoid duplicates
+
+    try {
+      // Listen for changes in the Goals node where managerId matches and isCompleted is true
+      _databaseReference
+          .orderByChild('managerId')
+          .equalTo(managerId)
+          .onValue
+          .listen((event) {
+        final data = event.snapshot.value as Map<dynamic, dynamic>?;
+
+        if (data != null) {
+          // Filter goals where isCompleted is true
+          _goals = data.entries.map((entry) {
+            final goalData = entry.value as Map<dynamic, dynamic>;
+            // Only include completed goals
+            if (goalData['isCompleted'] == true) {
+              return Goal.fromJson(goalData, entry.key);
+            }
+            return null; // Return null for non-completed goals
+          }).whereType<Goal>().toList(); // Remove nulls from the list
+
+          print("Completed goals fetched for manager ID $managerId: ${_goals.length}");
+        } else {
+          _goals = []; // No goals found
+          print("No goals found for the manager ID: $managerId.");
+        }
+        notifyListeners(); // Notify listeners to update the UI
+      });
+    } catch (e) {
+      print('Error fetching completed goals for manager ID $managerId: $e');
+    }
+  }
+
+
+  Future<void> markGoalAsRejected(String goalId, String reason) async {
+    try {
+      // Update the goal status in the database
+      await _databaseReference.child(goalId).update({
+        'isCompleted': false, // Set isCompleted to false
+        'status': 'Rejected',
+        'rejectionReason': reason, // Add rejection reason to the database
+
+      });
+
+      // Optionally, update the local goals list
+      final goalIndex = _goals.indexWhere((goal) => goal.id == goalId);
+      if (goalIndex != -1) {
+        _goals[goalIndex].isCompleted = false; // Update local state
+        _goals[goalIndex].status = 'Rejected'; // Update local status
+        _goals[goalIndex].rejectionReason = reason; // Update local rejection reason
+
+        notifyListeners(); // Notify listeners
+      }
+    } catch (e) {
+      print('Error rejecting goal: $e');
+    }
+  }
+
+
+  // In your GoalsProvider class
+  Future<void> updateGoalRatingAndFeedback(String goalId, double rating, String feedback) async {
+    try {
+      await _databaseReference.child(goalId).update({
+        'rating': rating,
+        'feedback': feedback, // Assuming you have a 'feedback' field in the database
+      });
+
+      final goalIndex = _goals.indexWhere((goal) => goal.id == goalId);
+      if (goalIndex != -1) {
+        _goals[goalIndex].rating = rating;
+        _goals[goalIndex].feedback = feedback;
+        notifyListeners();
+      }
+    } catch (e) {
+      print('Error updating goal rating and feedback: $e');
+    }
+  }
+
+
+
+
+
+
 
 }
