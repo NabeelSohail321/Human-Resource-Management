@@ -424,12 +424,7 @@ class _HRDashboardState extends State<HRDashboard> with SingleTickerProviderStat
   }
 
 
-  // List<WorkLocationData> getWorkLocationData() {
-  //   return [
-  //     WorkLocationData('Home', 45.43),
-  //     WorkLocationData('Office', 54.57),
-  //   ];
-  // }
+
 
   List<DepartmentAttendanceData> getDepartmentAttendanceData() {
     return [

@@ -33,10 +33,11 @@ class _TotalGoalsPageState extends State<TotalGoalsPage> {
             itemCount: goals.length,
             itemBuilder: (context, index) {
               final goal = goals[index];
+
               return Card(
                 elevation: 5,
                 child: ListTile(
-                  title: Text(goal.departmentName),
+                  title: Text("${goal.departmentName}"),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -55,7 +56,9 @@ class _TotalGoalsPageState extends State<TotalGoalsPage> {
                           fontSize: 18,
                           fontWeight: FontWeight.bold
                       ),),
-                      Text("Feedback: ${goal.feedback}",style: const TextStyle(
+                      Text(
+                        "Feedback: ${goal.feedback}",
+                        style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold
                       ),),

@@ -15,6 +15,7 @@ class Goal {
   double rating; // Add the rating field
   String feedback; // Add this property
   String? rejectionReason; // Add this line
+  DateTime? deadline; // New property for the deadline
 
 
 
@@ -34,6 +35,7 @@ class Goal {
     this.rating = 0.0, // Initialize rating to 0.0 by default
     this.feedback = '', // Initialize with an empty string
     this.rejectionReason, // Include in the constructor
+    this.deadline, // Add deadline to the constructor
 
 
 
@@ -56,6 +58,7 @@ class Goal {
       'rating': rating, // Include rating in the JSON
       'feedback': feedback, // Include feedback in the JSON object
       'rejectionReason': rejectionReason, // Include feedback in the JSON object
+      'deadline': deadline?.toIso8601String(), // Add the deadline to the JSON (formatted)
 
 
     };
@@ -79,6 +82,7 @@ class Goal {
       rating: (json['rating'] as num?)?.toDouble() ?? 0.0, // Parse rating from JSON
       feedback: json['feedback'] ?? '', // Ensure feedback is retrieved
       rejectionReason: json['rejectionReason'] ?? '', // Ensure feedback is retrieved
+      deadline: json['deadline'] != null ? DateTime.parse(json['deadline']) : null, // Parse deadline from JSON
 
     );
   }

@@ -14,6 +14,7 @@ class Goalsbymanager extends StatefulWidget {
 }
 
 class _GoalsbymanagerState extends State<Goalsbymanager> {
+  DateTime? selectedDeadline;
 
   @override
   void initState() {
@@ -44,34 +45,43 @@ class _GoalsbymanagerState extends State<Goalsbymanager> {
         return AlertDialog(
           title: const Text("Assign Goal to Employee"),
           content: SizedBox(
-            height: 300, // Set height to accommodate the employee list
-            width: 300, // Set width for the dialog
-            child: ListView.builder(
-              itemCount: employeeProvider.employees.length,
-              itemBuilder: (context, index) {
-                final employee = employeeProvider.employees[index];
+            height: 400, // Adjust height for employee list and date picker
+            width: 300,
+            child: Column(
+              children: [
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: employeeProvider.employees.length,
+                    itemBuilder: (context, index) {
+                      final employee = employeeProvider.employees[index];
 
-                return Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(width: 1),
-                  ),
-                  child: ListTile(
-                    title: Text(employee.name),
-                    subtitle: Text(employee.department),
-                    onTap: () {
-                      // Assign the goal to the selected employee
-                      goalsProvider.assignGoalToEmployee(goal, employee.uid);
+                      return Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(width: 1),
+                        ),
+                        child: ListTile(
+                          title: Text(employee.name),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(employee.department),
+                              Text(employee.uid),
+                            ],
+                          ),
+                          onTap: () async {
+                            print("Clicked");
+                            // Show the date picker after selecting the employee
+                            await _selectDeadline(goal, employee.uid); // Await for date picker to finish
+                            // The dialog will close in _selectDeadline
+                          },
 
-                      // Update the goal's assignedEmployeeId property
-                      goal.assignedEmployeeId = employee.uid;
-
-                      Navigator.of(context).pop(); // Close the dialog
-                      setState(() {}); // Refresh the UI
+                        ),
+                      );
                     },
                   ),
-                );
-              },
+                ),
+              ],
             ),
           ),
           actions: [
@@ -85,6 +95,35 @@ class _GoalsbymanagerState extends State<Goalsbymanager> {
     );
   }
 
+// Function to show the date picker
+  Future<void> _selectDeadline(Goal goal, String employeeId) async {
+    final selectedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2101),
+    );
+
+    if (selectedDate != null) {
+      // Save the deadline and assign the goal to the selected employee
+      setState(() {
+        goal.deadline = selectedDate; // Update the goal's deadline
+      });
+
+      // Assign the goal to the employee and save the deadline
+      final goalsProvider = Provider.of<GoalsProvider>(context, listen: false);
+      await goalsProvider.assignGoalToEmployee(goal, employeeId, selectedDate); // Ensure this method accepts the date
+
+      // Update the goal's properties
+      goal.assignedEmployeeId = employeeId;
+
+
+      // Close the dialog after successfully assigning the goal
+      Navigator.of(context).pop(); // Close the dialog here
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     final goalsProvider = Provider.of<GoalsProvider>(context);
@@ -92,7 +131,6 @@ class _GoalsbymanagerState extends State<Goalsbymanager> {
 
     return Scaffold(
       appBar: CustomAppBar.customAppBar("Goals for Manager"),
-
       body: goals.isEmpty
           ? const Center(child: Text("No goals found."))
           : ListView.builder(
@@ -106,7 +144,7 @@ class _GoalsbymanagerState extends State<Goalsbymanager> {
                 ListTile(
                   title: Text(goal.description),
                   subtitle: Text(
-                    "Department: ${goal.departmentName}\nManager: ${goal.managerName} (${goal.managerNumber})\nDate: ${goal.dateTime.toIso8601String()}",
+                    "Department: ${goal.departmentName}\nManager: ${goal.managerName} (${goal.managerNumber})\nDate: ${goal.dateTime.toIso8601String()}\nDeadline: ${goal.deadline?.toIso8601String() ?? 'Not Set'}",
                     style: const TextStyle(color: Colors.grey),
                   ),
                   trailing: goal.assignedEmployeeId == null

@@ -134,8 +134,11 @@ class _GoalAssignmentState extends State<GoalAssignment> {
       try {
         // Add the goal using the GoalsProvider
         await goalsProvider.addGoal(newGoal);
-        descripController.clear(); // Clear the text field
-        selectedManager = null; // Reset selected manager if necessary
+        // Clear the text field and reset selectedManager within setState
+        setState(() {
+          descripController.clear(); // Clear the text field
+          selectedManager = null; // Reset selected manager if necessary
+        });
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Goal added successfully!')));
 
       } catch (e) {

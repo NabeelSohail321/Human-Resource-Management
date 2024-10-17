@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../Providers/goalprovider.dart';
 import '../components.dart';
-import 'allcompletedgoalsbyemployee.dart';
 
 class EmployeeGoals extends StatefulWidget {
   const EmployeeGoals({super.key});
@@ -27,8 +26,22 @@ class _EmployeeGoalsState extends State<EmployeeGoals> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar.customAppBar("Your New Goals"),
+      // appBar: CustomAppBar.customAppBar("Your New Goals"),
+      appBar: AppBar(
+        leading: IconButton(onPressed: (){
+          Navigator.pushNamed(context, ('/employeepage'));
+        }, icon: Icon(Icons.arrow_back)),
+        backgroundColor:const Color(0xFFDEE5D4),
+        title: Text("Your New Goals",style: TextStyle(
+          fontFamily: 'Lora',
+          fontSize: 25,
+          fontWeight: FontWeight.bold,
+          color: Colors.black,
+        ),
+        ),
+        centerTitle: true,
 
+      ),
       body: Consumer<GoalsProvider>(
         builder: (context, goalsprovider, child) {
           final goals = goalsprovider.employyeGoals;
@@ -69,6 +82,11 @@ class _EmployeeGoalsState extends State<EmployeeGoals> {
                             fontSize: 18,
                             fontWeight: FontWeight.bold
                           ),),
+                          Text("Dead Line: ${goal['deadline']}",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.red,
+                            ),)
 
                         ],
                       ),

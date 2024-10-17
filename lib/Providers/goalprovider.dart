@@ -30,6 +30,10 @@ class GoalsProvider with ChangeNotifier {
 
       // Save the goal using the generated ID
       await newGoalRef.set(newGoal.toJson());
+      _goals.add(newGoal);
+
+      _goals.sort((a, b) => b.dateTime.compareTo(a.dateTime));
+
       notifyListeners(); // Notify listeners that the state has changed
     } catch (e) {
       throw Exception('Failed to add goal: $e');
@@ -50,6 +54,26 @@ class GoalsProvider with ChangeNotifier {
 
         if (employeeGoalsData != null && employeeGoalsData.isNotEmpty) {
           _employeeGoals = employeeGoalsData.values.toList();
+
+
+
+          // Current time for deadline checks
+          DateTime now = DateTime.now();
+
+          // Check deadlines and update status if needed
+          for (var goal in _employeeGoals) {
+            DateTime deadline = DateTime.parse(goal['deadline']);
+            if (now.isAfter(deadline) && !goal['isCompleted']) {
+              goal['status'] = 'Failed'; // Update status to Failed if deadline has passed
+            }
+          }
+
+          // Sort goals by 'dateTime' in descending order
+          _employeeGoals.sort((a, b) {
+            final dateTimeA = DateTime.parse(a['dateTime']);
+            final dateTimeB = DateTime.parse(b['dateTime']);
+            return dateTimeB.compareTo(dateTimeA); // Most recent first
+          });
           notifyListeners(); // Notify listeners after updating goals
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -75,7 +99,8 @@ class GoalsProvider with ChangeNotifier {
             final goalData = entry.value as Map<dynamic, dynamic>;
             return Goal.fromJson(goalData, entry.key);
           }).toList();
-
+          // Sort the goals by dateTime in descending order to show the latest goals first
+          _goals.sort((a, b) => b.dateTime.compareTo(a.dateTime));
           // Use SchedulerBinding to notify listeners after the current frame
           SchedulerBinding.instance.addPostFrameCallback((_) {
             notifyListeners(); // Notify listeners when goals are fetched
@@ -122,6 +147,8 @@ class GoalsProvider with ChangeNotifier {
         _goals = data.entries.map((entry) {
           return Goal.fromJson(entry.value as Map<dynamic, dynamic>, entry.key);
         }).toList();
+        // Sort goals by dateTime in descending order
+        _goals.sort((a, b) => b.dateTime.compareTo(a.dateTime));
         print("Goals fetched: ${_goals.length}"); // Log number of goals fetched
       } else {
         _goals = []; // No goals found
@@ -136,13 +163,18 @@ class GoalsProvider with ChangeNotifier {
     await fetchGoalsbymanager(); // Then fetch goals
   }
 
-  Future<void> assignGoalToEmployee(Goal goal, String employeeUid) async {
+  Future<void> assignGoalToEmployee(Goal goal, String employeeUid, DateTime deadline) async {
     try {
       // Update the goal in the database with the selected employee's UID
       await _databaseReference.child(goal.id).update({
         'assignedEmployeeId': employeeUid,
+        'deadline': deadline.toIso8601String(), // Add the deadline field in ISO8601 format
+
         // Add a field to hold the assigned employee's UID
       });
+      // Update the goal's local instance
+      goal.assignedEmployeeId = employeeUid; // Update local property
+      goal.deadline = deadline; // Update local property
       notifyListeners(); // Notify listeners that the goal has been updated
     } catch (e) {
       print('Failed to assign goal to employee: $e');

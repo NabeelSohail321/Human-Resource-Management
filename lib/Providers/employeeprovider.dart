@@ -149,8 +149,14 @@ class EmployeeProvider with ChangeNotifier {
         int totalEmployees = locationCount['Work from Home']! + locationCount['Work from Office']!;
         if (totalEmployees > 0) {
           workLocationCounts = [
-            WorkLocationData('Work from Home', (locationCount['Work from Home']! * 100) / totalEmployees),
-            WorkLocationData('Work from Office', (locationCount['Work from Office']! * 100) / totalEmployees),
+            WorkLocationData(
+                'Work from Home',
+                double.parse(((locationCount['Work from Home']! * 100) / totalEmployees).toStringAsFixed(2))
+            ),
+            WorkLocationData(
+                'Work from Office',
+                double.parse(((locationCount['Work from Office']! * 100) / totalEmployees).toStringAsFixed(2))
+            ),
           ];
         } else {
           workLocationCounts = [
@@ -158,6 +164,7 @@ class EmployeeProvider with ChangeNotifier {
             WorkLocationData('Work from Office', 0),
           ];
         }
+
 
         notifyListeners(); // Notify listeners to update the UI
       }
